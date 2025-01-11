@@ -21,7 +21,7 @@ set(CMAKE_CXX_EXTENSIONS OFF)
 set(CMAKE_RUNTIME_OUTPUT_DIRECTORY ${CMAKE_BINARY_DIR}/bin)
 
 set(SOURCES_FILES
-    ${CMAKE_SOURCE_DIR}/src/main.cpp
+    src/main.cpp
 )
 
 set(sqlite3_INCLUDE_DIRS /usr/include/sqlite3.h)
@@ -58,10 +58,6 @@ if(CMAKE_C_COMPILER_ID STREQUAL "GNU")
     )
 endif()
 
-# Enable tests
 if (USE_TESTS)
-    include(CTest)
-
-    enable_testing()
     add_subdirectory(tests)
 endif()

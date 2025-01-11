@@ -1,14 +1,8 @@
-Include(FetchContent)
+find_package(Catch2 CONFIG REQUIRED)
 
-FetchContent_Declare(
-  Catch2
-  GIT_REPOSITORY https://github.com/catchorg/Catch2.git
-  GIT_TAG        v3.4.0
-)
+enable_testing()
 
-FetchContent_MakeAvailable(Catch2)
-
-list(APPEND CMAKE_MODULE_PATH ${catch2_SOURCE_DIR}/extras)
+include(CTest)
 include(Catch)
 
 # Find all test files
@@ -20,6 +14,7 @@ function(create_test test_file)
     add_executable(${test_name} ${test_file})
 
     target_link_libraries(${test_name} PRIVATE
+        Catch2::Catch2
         Catch2::Catch2WithMain
     )
 
@@ -27,13 +22,7 @@ function(create_test test_file)
         ${CMAKE_SOURCE_DIR}/src
     )
 
-    catch_discover_tests(${test_name}
-        REPORTER XML
-        OUTPUT_DIR ${CMAKE_BINARY_DIR}/test-results
-        OUTPUT_PREFIX "test-"
-        PROPERTIES
-            WILL_FAIL FALSE
-    )
+    catch_discover_tests(${test_name})
 endfunction()
 
 foreach(test_file ${TEST_FILES})

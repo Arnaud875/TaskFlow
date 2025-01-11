@@ -1,5 +1,9 @@
 #include <catch2/catch_test_macros.hpp>
 
+TEST_CASE("hello") {
+    REQUIRE(true);
+};
+
 TEST_CASE("Basic assertions", "[catch2]") {
     // Assertions de base
     REQUIRE(1 + 1 == 2);

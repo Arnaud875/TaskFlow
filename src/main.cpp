@@ -1,5 +1,6 @@
 #include <iostream>
-#include <map>
 
 int main() {
+    std::cout << "hello" << std::endl;
+    return 0;
 }
