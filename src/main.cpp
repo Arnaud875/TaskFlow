@@ -1,6 +1,6 @@
 #include <iostream>
+#include "Database/Database.hpp"
 
 int main() {
-    std::cout << "hello" << std::endl;
     return 0;
 }
