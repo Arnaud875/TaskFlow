@@ -7,3 +7,5 @@
 # Ignore build folder
 build/
 out/
+
+patch_notes.txt

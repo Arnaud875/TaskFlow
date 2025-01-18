@@ -1,5 +1,6 @@
 #pragma once
 #include "Static.hpp"
+#include "Utils/Singleton.hpp"
 
 namespace Utils {
 	class Logger : public Singleton<Logger> {
@@ -7,6 +8,6 @@ namespace Utils {
 		Logger() = default;
 
 	public:
-
-	}
+		~Logger() = default;
+	};
 }
