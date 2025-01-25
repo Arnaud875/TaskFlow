@@ -1,9 +1,12 @@
-#pragma once
+#ifndef STATIC_H_
+#define STATIC_H_
 
-#define DATABASE_FILE_NAME "task_flow.db"
+constexpr const char *DATABASE_FILE_NAME = "task_flow.db";
 
 #include <iostream>
+#include <memory>
 #include <sstream>
 #include <string>
 #include <vector>
-#include <memory>
+
+#endif

@@ -1,0 +1,61 @@
+Checks: >
+ clang-diagnostic-*,
+ clang-analyzer-*,
+ cppcoreguidelines-*,
+ modernize-*,
+ performance-*,
+ bugprone-*,
+ readability-*,
+ misc-*,
+ google-*,
+ -modernize-use-trailing-return-type,
+ -modernize-return-braced-init-list,
+ -llvm-header-guard,
+ -llvmlibc-*,
+ -llvmlibc-inline-function-decl,
+ -llvmlibc-implementation-in-namespace,
+ -misc-non-private-member-variables-in-classes,
+ -cppcoreguidelines-non-private-member-variables-in-classes,
+ -cppcoreguidelines-avoid-magic-numbers,
+ -readability-magic-numbers,
+ -misc-include-cleaner
+
+# Treat all warnings as errors
+WarningsAsErrors: '*'
+HeaderFilterRegex: '.*'
+
+CheckOptions:
+ # Naming conventions
+ - key: readability-identifier-naming.PrivateMethodCase
+   value: camelBack
+ - key: readability-identifier-naming.PrivateMemberSuffix
+   value: '_'
+ - key: readability-identifier-naming.ClassCase
+   value: CamelCase
+ - key: readability-identifier-naming.ConstexprVariableCase
+   value: UPPER_CASE
+ - key: readability-identifier-naming.EnumCase
+   value: CamelCase
+ - key: readability-identifier-naming.FunctionCase
+   value: CamelCase
+ - key: readability-identifier-naming.VariableCase
+   value: camelBack
+ - key: readability-identifier-naming.ParameterCase
+   value: camelBack
+ # Pointer and reference alignment
+ - key: readability-implicit-bool-conversion.AllowIntegerConditions
+   value: true
+ - key: readability-implicit-bool-conversion.AllowPointerConditions
+   value: true
+ # Template rules
+ - key: readability-function-cognitive-complexity.IgnoreMacros
+   value: true
+ # Other rules
+ - key: performance-move-const-arg.CheckTriviallyCopyableMove
+   value: true
+ - key: cppcoreguidelines-special-member-functions.AllowSoleDefaultDtor
+   value: true
+ - key: readability-function-size.LineThreshold
+   value: '100'
+ - key: readability-function-size.ParameterThreshold
+   value: '5'

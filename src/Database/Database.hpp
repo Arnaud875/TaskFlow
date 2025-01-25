@@ -1,15 +1,19 @@
-#pragma once
+#ifndef DATABASE_DATABASE_H_
+#define DATABASE_DATABASE_H_
+
 #include "Static.hpp"
 #include "Utils/Singleton.hpp"
 
 namespace Database {
-	class Database : public Utils::Singleton<Database> {
-		friend class Utils::Singleton<Database>;
-		Database() = default;
+    class Database : public Utils::Singleton<Database> {
+        friend class Utils::Singleton<Database>;
+        Database() = default;
 
-	public:
-		~Database() = default;
+    public:
+        ~Database() = default;
 
-		bool Connect();
-	};
-}
+        bool Connect();
+    };
+}  // namespace Database
+
+#endif
