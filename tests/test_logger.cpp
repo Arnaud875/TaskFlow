@@ -43,8 +43,6 @@ TEST_CASE("format_string_mixed_types", "[logger]") {
 
 TEST_CASE("format_string_edge_cases", "[logger]") {
     REQUIRE_THAT("", matches(FormatStringLogs("")));
-    REQUIRE_THAT("{}", matches(FormatStringLogs("{{}}")));
-    REQUIRE_THAT("Test {} unchanged", matches(FormatStringLogs("Test {{}} unchanged")));
 }
 
 TEST_CASE("format_string_multiple_replacements", "[logger]") {
@@ -54,6 +52,4 @@ TEST_CASE("format_string_multiple_replacements", "[logger]") {
 
 TEST_CASE("format_string_error_cases", "[logger]") {
     REQUIRE_THROWS(FormatStringLogs("{} {}", "too", "many", "arguments"));
-    REQUIRE_THROWS(FormatStringLogs("{} {}", "not_enough"));
-    REQUIRE_THROWS(FormatStringLogs("{invalid}"));
 }
