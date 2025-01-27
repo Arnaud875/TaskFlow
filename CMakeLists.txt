@@ -63,6 +63,7 @@ target_precompile_headers(TaskFlow PRIVATE "src/Static.hpp")
 
 if (DEV_MODE)
     find_program(CLANG_TIDY_EXE "clang-tidy")
+
     if (CLANG_TIDY_EXE)
         set(CLANG_TIDY_COMMAND "${CLANG_TIDY_EXE}" 
             "-p=${CMAKE_BINARY_DIR}"

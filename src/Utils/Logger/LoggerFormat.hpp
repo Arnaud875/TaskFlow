@@ -1,17 +1,17 @@
 #ifndef UTILS_LOGGER_LOGGERFORMAT_H_
 #define UTILS_LOGGER_LOGGERFORMAT_H_
 
-#include "Static.hpp"
+#include <string_view>
 
 namespace Utils::Logger {
     template<typename... Args>
-    inline std::string FormatStringLogs(const std::string &text, Args &&...args) {
+    inline std::string FormatStringLogs(std::string_view text, Args &&...args) {
         std::ostringstream oss;
         std::size_t index = 0;
-        std::size_t textLength = text.size();
+        const std::size_t textLength = text.size();
 
-        auto helperFormat = [&](auto&& arg) {
-            std::size_t position = text.find("{}", index);
+        auto helperFormat = [&](auto &&arg) {
+            const std::size_t position = text.find("{}", index);
 
             if (position == std::string::npos)
                 throw std::runtime_error("Error: Not enough arguments for the format string");

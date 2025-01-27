@@ -1,8 +1,8 @@
 #ifndef UTILS_SINGLETON_H_
 #define UTILS_SINGLETON_H_
 
-#include "Static.hpp"
 #include <cassert>
+#include <memory>
 
 namespace Utils {
     /*

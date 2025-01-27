@@ -7,6 +7,7 @@ constexpr const char *DATABASE_FILE_NAME = "task_flow.db";
 #include <memory>
 #include <sstream>
 #include <string>
+#include <string_view>
 #include <vector>
 
 #endif
