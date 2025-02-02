@@ -1,4 +1,4 @@
-cmake_minimum_required(VERSION 3.13)
+cmake_minimum_required(VERSION 3.20)
 project(TaskFlow LANGUAGES CXX)
 
 # Dooes not build projet if is executed in MacOS
@@ -6,6 +6,7 @@ if (APPLE)
     message(FATAL_ERROR "This project does not support MacOS")
 endif()
 
+# Set build type to Release if not set
 if (NOT CMAKE_BUILD_TYPE)
     set(CMAKE_BUILD_TYPE Release)
 endif()
@@ -13,57 +14,67 @@ endif()
 # Do not build tests by default
 set(USE_TESTS OFF CACHE BOOL "Enable tests")
 
+# Activate dev function
 set(DEV_MODE OFF CACHE BOOL "Enable dev mode")
 
-# C++ configuration
 set(CMAKE_CXX_STANDARD 17)
 set(CMAKE_CXX_STANDARD_REQUIRED ON)
 set(CMAKE_CXX_EXTENSIONS OFF)
 
-set(CMAKE_RUNTIME_OUTPUT_DIRECTORY ${CMAKE_BINARY_DIR}/bin)
 set(CMAKE_EXPORT_COMPILE_COMMANDS ON)
-
-# Add cmake modules folder
 set(CMAKE_MODULE_PATH ${CMAKE_MODULE_PATH} "${CMAKE_SOURCE_DIR}/cmake")
 
-# Get all project files
+# Set database file name and schema file source
+set(DATABASE_FILE_NAME "task_flow.db")
+set(DATABASE_SCHEMA_FILE_NAME "${CMAKE_SOURCE_DIR}/data/database.sql")
+
 file(GLOB_RECURSE ALL_SOURCE_FILES 
     ${PROJECT_SOURCE_DIR}/src/*.cpp
     ${PROJECT_SOURCE_DIR}/src/*.hpp
 )
 
-# Add clang-format target
-find_program(CLANG_FORMAT_EXE "clang-format")
-if(CLANG_FORMAT_EXE)
-    add_custom_target(format
-        COMMAND ${CLANG_FORMAT_EXE} -i -style=file ${ALL_SOURCE_FILES}
-        COMMENT "Formatting source code with clang-format"
-        VERBATIM
-    )
-endif()
+# Remove main.cpp from the list of source files
+list(FILTER ALL_SOURCE_FILES EXCLUDE REGEX ".*main.cpp$")
 
+include(FetchContent)
 include(compileFlags)
+include(bcrypt)
 
 find_package(Threads REQUIRED)
 find_package(Crow CONFIG REQUIRED)
 find_package(nlohmann_json CONFIG REQUIRED)
 find_package(unofficial-sqlite3 CONFIG REQUIRED)
 
-add_executable(TaskFlow ${ALL_SOURCE_FILES})
+# Créer une bibliothèque avec les sources
+add_library(TaskFlow_lib STATIC ${ALL_SOURCE_FILES})
 
-target_include_directories(TaskFlow PRIVATE ${CMAKE_SOURCE_DIR}/src)
-target_link_libraries(TaskFlow PRIVATE 
+# Configurer la bibliothèque
+target_include_directories(TaskFlow_lib PUBLIC ${CMAKE_SOURCE_DIR}/src)
+target_link_libraries(TaskFlow_lib PUBLIC 
     Threads::Threads
     Crow::Crow
     unofficial::sqlite3::sqlite3
     nlohmann_json::nlohmann_json
+    bcrypt
 )
 
-target_precompile_headers(TaskFlow PRIVATE "src/Static.hpp")
+# Ajouter les définitions à la bibliothèque
+target_compile_definitions(TaskFlow_lib PUBLIC 
+    DATABASE_FILE_NAME="${DATABASE_FILE_NAME}"
+    DATABASE_SCHEMA_FILE_NAME="${DATABASE_SCHEMA_FILE_NAME}"
+    DEV_MODE="${DEV_MODE}"
+)
+
+target_precompile_headers(TaskFlow_lib PUBLIC "src/Static.hpp")
+
+# Modifier l'exécutable pour utiliser la bibliothèque
+add_executable(TaskFlow src/main.cpp)
+target_link_libraries(TaskFlow PRIVATE TaskFlow_lib)
 
 if (DEV_MODE)
     find_program(CLANG_TIDY_EXE "clang-tidy")
 
+    # Add clang target
     if (CLANG_TIDY_EXE)
         set(CLANG_TIDY_COMMAND "${CLANG_TIDY_EXE}" 
             "-p=${CMAKE_BINARY_DIR}"
@@ -83,8 +94,19 @@ if (DEV_MODE)
             COMMENT ""
         )
     endif()
+
+    # Add clang-format target
+    find_program(CLANG_FORMAT_EXE "clang-format")
+    if(CLANG_FORMAT_EXE)
+        add_custom_target(format
+            COMMAND ${CLANG_FORMAT_EXE} -i -style=file ${ALL_SOURCE_FILES}
+            COMMENT "Formatting source code with clang-format"
+            VERBATIM
+        )
+    endif()
 endif()
 
 if (USE_TESTS)
+    # Add tests targets
     add_subdirectory(tests)
 endif()

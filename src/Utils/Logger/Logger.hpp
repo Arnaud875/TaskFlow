@@ -5,19 +5,7 @@
 #include "Static.hpp"
 #include "Utils/Singleton.hpp"
 #include "Utils/SourceLocation.hpp"
-#include <unordered_map>
-
-#define LOGS(message, level, ...)                                                                  \
-    Utils::Logger::Logger::GetInstance().Logs(                                                     \
-        message, level, Utils::SourceLocation::current(), ##__VA_ARGS__)
-
-#define LOG_INFO(message, ...) LOGS(message, Utils::Logger::Logger::LogsLevel::INFO, ##__VA_ARGS__)
-#define LOG_WARNING(message, ...)                                                                  \
-    LOGS(message, Utils::Logger::Logger::LogsLevel::WARNING, ##__VA_ARGS__)
-#define LOG_ERROR(message, ...)                                                                    \
-    LOGS(message, Utils::Logger::Logger::LogsLevel::ERROR, ##__VA_ARGS__)
-#define LOG_DEBUG(message, ...)                                                                    \
-    LOGS(message, Utils::Logger::Logger::LogsLevel::DEBUG, ##__VA_ARGS__)
+#include <array>
 
 namespace Utils::Logger {
     class Logger : public Singleton<Logger> {
@@ -25,27 +13,83 @@ namespace Utils::Logger {
         Logger() = default;
 
     public:
-        enum class LogsLevel { INFO, WARNING, ERROR, DEBUG };
-        std::unordered_map<LogsLevel, std::string> logsLevelString = {
-            {LogsLevel::INFO, "INFO"},
-            {LogsLevel::WARNING, "WARNING"},
-            {LogsLevel::ERROR, "ERROR"},
-            {LogsLevel::DEBUG, "DEBUG"}};
+        enum class LogsLevel : uint8_t {
+            INFO,
+            WARNING,
+            ERROR,
+            FATAL,
+            DEBUG,
+            COUNT  // Size of the enum
+        };
+
+        static constexpr std::array<std::string_view, static_cast<size_t>(LogsLevel::COUNT)>
+            logsLevelString = {"INFO", "WARNING", "ERROR", "FATAL", "DEBUG"};
 
         template<typename... Args>
-        void
-        Logs(std::string_view message, LogsLevel level, const SourceLocation &loc, Args &&...args) {
-            std::ostringstream oss;
-            oss << logsLevelString[level] << " ";
-            oss << loc.fileName() << ":";
-            oss << loc.functionName() << "(";
-            oss << loc.line() << "): ";
-            oss << FormatStringLogs(message, std::forward<Args>(args)...);
-            std::cout << oss.str() << std::endl;
+        void Logs(std::string_view message,
+                  LogsLevel level,
+                  const SourceLocation &loc,
+                  Args &&...args) noexcept {
+            if constexpr (!DEV_MODE) {
+                // Pre-allocate memory for the buffer
+                static thread_local std::string buffer;
+                buffer.clear();
+                buffer.reserve(256);
+
+                buffer.append(logsLevelString[static_cast<size_t>(level)]);
+                buffer.append(" ");
+                buffer.append(loc.fileName());
+                buffer.append(":");
+                buffer.append(loc.functionName());
+                buffer.append("(");
+
+                // Using snprintf to format integer to string (More optimized than std::to_string)
+                char lineBuffer[16];
+                const int lineLength =
+                    std::snprintf(lineBuffer, sizeof(lineBuffer), "%d", loc.line());
+
+                buffer.append(lineBuffer, lineLength);
+                buffer.append("): ");
+
+                if constexpr (sizeof...(args) > 0) {
+                    buffer.append(FormatStringLogs(message, std::forward<Args>(args)...));
+                } else {
+                    buffer.append(message);
+                }
+
+                buffer.append("\n");
+
+                // Unique write to the console
+                std::fwrite(buffer.data(), 1, buffer.size(), stdout);
+            }
+        }
+
+        static std::string GetLastError() {
+            return Logger::lastError_;
+        }
+
+        static void SetLastError(const std::string &error) {
+            Logger::lastError_ = error;
         }
 
         ~Logger() = default;
+
+    private:
+        inline static std::string lastError_ = "";
     };
+
+#define LOGS(message, level, ...)                                                                  \
+    Utils::Logger::Logger::GetInstance().Logs(                                                     \
+        message, level, Utils::SourceLocation::current(), ##__VA_ARGS__)
+#define LOG_INFO(message, ...) LOGS(message, Utils::Logger::Logger::LogsLevel::INFO, ##__VA_ARGS__)
+#define LOG_WARNING(message, ...)                                                                  \
+    LOGS(message, Utils::Logger::Logger::LogsLevel::WARNING, ##__VA_ARGS__)
+#define LOG_ERROR(message, ...)                                                                    \
+    LOGS(message, Utils::Logger::Logger::LogsLevel::ERROR, ##__VA_ARGS__)
+#define LOG_FATAL(message, ...)                                                                    \
+    LOGS(message, Utils::Logger::Logger::LogsLevel::FATAL, ##__VA_ARGS__)
+#define LOG_DEBUG(message, ...)                                                                    \
+    LOGS(message, Utils::Logger::Logger::LogsLevel::DEBUG, ##__VA_ARGS__)
 }  // namespace Utils::Logger
 
 #endif

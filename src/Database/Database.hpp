@@ -1,8 +1,8 @@
 #ifndef DATABASE_DATABASE_H_
 #define DATABASE_DATABASE_H_
 
-#include "Static.hpp"
 #include "Utils/Singleton.hpp"
+#include <sqlite3.h>
 
 namespace Database {
     class Database : public Utils::Singleton<Database> {
@@ -10,9 +10,14 @@ namespace Database {
         Database() = default;
 
     public:
-        ~Database() = default;
+        void Connect();
+        void Close();
 
-        bool Connect();
+    private:
+        bool tableExists(const std::string &tableName);
+        bool executeSQLFile(const std::string &fileName);
+
+        sqlite3 *database_ = nullptr;
     };
 }  // namespace Database
 

@@ -1,15 +1,23 @@
 #ifndef UTILS_LOGGER_LOGGERFORMAT_H_
 #define UTILS_LOGGER_LOGGERFORMAT_H_
 
-#include <string_view>
+#include "Static.hpp"
 
 namespace Utils::Logger {
+    /**
+     * @brief Format the string with the arguments
+     * @tparam Args The arguments type
+     * @param text The text to format
+     * @param args The arguments to format
+     * @return The formatted string
+     */
     template<typename... Args>
     inline std::string FormatStringLogs(std::string_view text, Args &&...args) {
         std::ostringstream oss;
         std::size_t index = 0;
         const std::size_t textLength = text.size();
 
+        // Helper lambda function to format the string
         auto helperFormat = [&](auto &&arg) {
             const std::size_t position = text.find("{}", index);
 
