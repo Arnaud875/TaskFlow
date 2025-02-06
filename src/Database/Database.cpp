@@ -1,11 +1,156 @@
 #include "Database.hpp"
+#include "DatabaseHelper.hpp"
 #include "Static.hpp"
 #include <fstream>
 
 using namespace Utils::Logger;
 
-void Database::Database::Connect() {
-    const int result = sqlite3_open(DATABASE_FILE_NAME, &database_);
+void Database::Database::UpdateValues(const SQLParams &params,
+                                      const std::pair<std::string, std::string>& where) const {
+    if (params.tableName.empty() || params.attributes.empty()) {
+        throw std::invalid_argument("Table name or values are empty");
+    }
+
+    if (!database_) {
+        throw std::runtime_error("Database is not connected");
+    }
+
+    const auto [sql, sqlValue] = FormatAttributes(params.attributes, true);
+    const std::string sqlStr = "UPDATE " + params.tableName + " SET " + sql + " WHERE " +
+                               where.first + " = " + where.second + ";";
+    sqlite3_stmt *stmt = nullptr;
+
+    if (sqlite3_prepare_v2(database_, sqlStr.c_str(), -1, &stmt, nullptr) != SQLITE_OK) {
+        throw std::runtime_error("Can't prepare SQL statement: " +
+                                 std::string(sqlite3_errmsg(database_)));
+    }
+
+    std::size_t index = 1;
+    for (const auto &attribute : params.attributes) {
+        sqlite3_bind_text(stmt, index++, attribute.value.c_str(), -1, SQLITE_STATIC);
+    }
+
+    if (sqlite3_step(stmt) != SQLITE_DONE) {
+        sqlite3_finalize(stmt);
+        throw std::runtime_error("Can't execute SQL statement: " +
+                                 std::string(sqlite3_errmsg(database_)));
+    }
+
+    sqlite3_finalize(stmt);
+}
+
+void Database::Database::InsertValues(const SQLParams &params) const {
+    if (params.tableName.empty() || params.attributes.empty()) {
+        throw std::invalid_argument("Table name or values are empty");
+    }
+
+    if (!database_) {
+        throw std::runtime_error("Database is not connected");
+    }
+
+    const auto [sql, sqlValue] = FormatAttributes(params.attributes);
+    const std::string sqlStr = "INSERT INTO " + params.tableName + sql + " VALUES " + sqlValue;
+
+    sqlite3_stmt *stmt = nullptr;
+    if (sqlite3_prepare_v2(database_, sqlStr.c_str(), -1, &stmt, nullptr) != SQLITE_OK) {
+        throw std::runtime_error("Can't prepare SQL statement: " +
+                                 std::string(sqlite3_errmsg(database_)));
+    }
+
+    std::size_t index = 1;
+    for (const auto &attribute : params.attributes) {
+        sqlite3_bind_text(stmt, index++, attribute.value.c_str(), -1, SQLITE_STATIC);
+    }
+
+    if (sqlite3_step(stmt) != SQLITE_DONE) {
+        sqlite3_finalize(stmt);
+        throw std::runtime_error("Can't execute SQL statement: " +
+                                 std::string(sqlite3_errmsg(database_)));
+    }
+
+    sqlite3_finalize(stmt);
+}
+
+std::vector<std::unordered_map<std::string, std::string>>
+Database::Database::FindAllRows(const SQLParams &params) const {
+    if (params.tableName.empty()) {
+        throw std::invalid_argument("Table name or values are empty");
+    }
+
+    if (!database_) {
+        throw std::runtime_error("Database is not connected");
+    }
+
+    const std::string sql = "SELECT * FROM " + params.tableName + ";";
+    sqlite3_stmt *stmt = nullptr;
+
+    if (sqlite3_prepare_v2(database_, sql.c_str(), -1, &stmt, nullptr) != SQLITE_OK) {
+        throw std::runtime_error("Can't prepare SQL statement: " +
+                                 std::string(sqlite3_errmsg(database_)));
+    }
+
+    std::vector<std::unordered_map<std::string, std::string>> rows;
+    while (sqlite3_step(stmt) == SQLITE_ROW) {
+        std::unordered_map<std::string, std::string> row;
+        const int columns = sqlite3_column_count(stmt);
+
+        for (int i = 0; i < columns; ++i) {
+            const char *columnName = sqlite3_column_name(stmt, i);
+            const int columnType = sqlite3_column_type(stmt, i);
+            row[columnName] = sqlTypeToString(stmt, columnType, i);
+        }
+
+        rows.emplace_back(row);
+    }
+
+    sqlite3_finalize(stmt);
+    return rows;
+}
+
+std::unordered_map<std::string, std::string>
+Database::Database::FindRowByAttributes(const SQLParams &params) const {
+    if (params.attributes.empty() || params.tableName.empty()) {
+        throw std::invalid_argument("Table name or values are empty");
+    }
+
+    if (!database_) {
+        throw std::runtime_error("Database is not connected");
+    }
+
+    const std::string sql =
+        "SELECT * FROM " + params.tableName + " WHERE " + params.attributes[0].name + " = ?;";
+    sqlite3_stmt *stmt = nullptr;
+
+    if (sqlite3_prepare_v2(database_, sql.c_str(), -1, &stmt, nullptr) != SQLITE_OK) {
+        throw std::runtime_error("Can't prepare SQL statement: " +
+                                 std::string(sqlite3_errmsg(database_)));
+    }
+
+    // Bind value to the statement and use SQLITE_STATIC to indicate that the
+    // pointer is constant and will not be deleted
+    sqlite3_bind_text(stmt, 1, params.attributes[0].value.c_str(), -1, SQLITE_STATIC);
+
+    // Check if row exists
+    if (sqlite3_step(stmt) != SQLITE_ROW) {
+        sqlite3_finalize(stmt);
+        return {};
+    }
+
+    std::unordered_map<std::string, std::string> rows;
+    const int columns = sqlite3_column_count(stmt);
+
+    for (int i = 0; i < columns; ++i) {
+        const char *columnName = sqlite3_column_name(stmt, i);
+        const int columnType = sqlite3_column_type(stmt, i);
+        rows[columnName] = sqlTypeToString(stmt, columnType, i);
+    }
+
+    sqlite3_finalize(stmt);
+    return rows;
+}
+
+void Database::Database::Connect(const std::string &databaseFile) {
+    const int result = sqlite3_open(databaseFile.c_str(), &database_);
     if (result != SQLITE_OK) {
         throw std::runtime_error("Can't open database: " + std::string(sqlite3_errmsg(database_)));
     }
@@ -22,7 +167,7 @@ void Database::Database::Connect() {
     LOG_INFO("Database connected successfully");
 };
 
-bool Database::Database::tableExists(const std::string &tableName) {
+bool Database::Database::tableExists(const std::string &tableName) const {
     sqlite3_stmt *stmt = nullptr;
     constexpr const char *SQL = "SELECT count(*) FROM sqlite_master WHERE type='table' AND name=?;";
 
@@ -41,16 +186,14 @@ bool Database::Database::tableExists(const std::string &tableName) {
     return exists;
 }
 
-bool Database::Database::executeSQLFile(const std::string &fileName) {
+bool Database::Database::executeSQLFile(const std::string &fileName) const {
     if (fileName.empty()) {
-        Logger::SetLastError("File name is empty");
-        return false;
+        throw std::invalid_argument("File name is empty");
     }
 
     std::ifstream file(fileName);
     if (!file.is_open()) {
-        Logger::SetLastError("Can't open file: " + fileName);
-        return false;
+        throw std::runtime_error("Can't open file: " + fileName);
     }
 
     std::string sql;
@@ -66,9 +209,8 @@ bool Database::Database::executeSQLFile(const std::string &fileName) {
     char *errorMessage = nullptr;
     const int result = sqlite3_exec(database_, sql.c_str(), nullptr, nullptr, &errorMessage);
     if (result != SQLITE_OK) {
-        Logger::SetLastError("SQL error: " + std::string(errorMessage));
         sqlite3_free(errorMessage);
-        return false;
+        throw std::runtime_error("Can't execute SQL file: " + fileName);
     }
 
     LOG_DEBUG("SQL file executed successfully: " + fileName);

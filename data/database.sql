@@ -3,7 +3,8 @@ CREATE TABLE `Users` (
   `username` varchar(16) NOT NULL,
   `email` text UNIQUE NOT NULL,
   `password` text NOT NULL,
-  `created_at` datetime NOT NULL DEFAULT (CURRENT_TIMESTAMP)
+  `created_at` datetime NOT NULL DEFAULT (CURRENT_TIMESTAMP),
+  `updated_at` datetime NOT NULL DEFAULT (CURRENT_TIMESTAMP)
 );
 
 CREATE TABLE `Status` (
@@ -20,7 +21,7 @@ CREATE TABLE `Tasks` (
   `status` integer NOT NULL,
   `priority` integer DEFAULT 0,
   `created_at` datetime NOT NULL DEFAULT (CURRENT_TIMESTAMP),
-  `updated_at` datetime,
+  `updated_at` datetime NOT NULL DEFAULT (CURRENT_TIMESTAMP),
   FOREIGN KEY (`user_id`) REFERENCES `Users` (`id`),
   FOREIGN KEY (`status`) REFERENCES `Status` (`status_id`)
 );

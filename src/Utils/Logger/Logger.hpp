@@ -8,11 +8,18 @@
 #include <array>
 
 namespace Utils::Logger {
+    /**
+     * @brief Class that logs messages to the console
+     * @note This class has a unique instance
+     */
     class Logger : public Singleton<Logger> {
         friend class Singleton<Logger>;
         Logger() = default;
 
     public:
+        /**
+         * @brief Enum class for the logs level
+         */
         enum class LogsLevel : uint8_t {
             INFO,
             WARNING,
@@ -22,9 +29,17 @@ namespace Utils::Logger {
             COUNT  // Size of the enum
         };
 
+        /**
+         * @brief Array of string representation of the logs level
+         */
         static constexpr std::array<std::string_view, static_cast<size_t>(LogsLevel::COUNT)>
             logsLevelString = {"INFO", "WARNING", "ERROR", "FATAL", "DEBUG"};
 
+        /**
+         * @brief Logs the message to the console
+         * @tparam Args Variadic template
+         * @param message Message to log
+         */
         template<typename... Args>
         void Logs(std::string_view message,
                   LogsLevel level,
@@ -43,7 +58,8 @@ namespace Utils::Logger {
                 buffer.append(loc.functionName());
                 buffer.append("(");
 
-                // Using snprintf to format integer to string (More optimized than std::to_string)
+                // Using snprintf to format integer to string (More optimized
+                // than std::to_string)
                 char lineBuffer[16];
                 const int lineLength =
                     std::snprintf(lineBuffer, sizeof(lineBuffer), "%d", loc.line());
@@ -64,10 +80,16 @@ namespace Utils::Logger {
             }
         }
 
+        /**
+         * @brief Get the last error message from the logger
+         */
         static std::string GetLastError() {
             return Logger::lastError_;
         }
 
+        /**
+         * @brief Set the last error message to the logger
+         */
         static void SetLastError(const std::string &error) {
             Logger::lastError_ = error;
         }

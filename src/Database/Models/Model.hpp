@@ -1,8 +1,8 @@
 #ifndef DATABASE_MODELS_MODEL_
 #define DATABASE_MODELS_MODEL_
 
+#include "Database/Database.hpp"
 #include "Static.hpp"
-#include <type_traits>
 
 namespace Database::Models {
     template<typename T, typename = void, typename... Args>
@@ -38,6 +38,10 @@ namespace Database::Models {
         void SetLastError(const std::string &error) {
             last_error_ = error;
         };
+
+        Database &GetDatabase() {
+            return Database::Database::GetInstance();
+        }
 
     private:
         std::string last_error_;

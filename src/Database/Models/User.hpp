@@ -7,29 +7,46 @@
 namespace Database::Models {
     class UserModel : public BaseModel<UserModel> {
     public:
-        void CreateImpl(int id,
-                        int createdAt,
-                        const std::string &username,
-                        const std::string &email,
-                        const std::string &password) {
-            if (username.empty() || email.empty() || password.empty()) {
+        UserModel() = default;
+
+        struct UserAttributes {
+            int userId;
+            std::string username;
+            std::string email;
+            std::string password;
+            int createdAt = 0;
+            int updatedAt = 0;
+            bool isPersisted = false;
+            bool isPasswordHashed = false;
+        };
+
+        void CreateImpl(const UserAttributes &param) {
+            if (param.username.empty() || param.email.empty() || param.password.empty()) {
                 throw std::invalid_argument("Username, email, and password must not be empty.");
             }
 
-            id_ = id;
-            created_at_ = createdAt;
+            userId_ = param.userId;
+            createdAt_ = param.createdAt;
+            updatedAt_ = param.updatedAt;
+            isPersisted_ = param.isPersisted;
 
-            if (!SetUsername(username) || !SetEmail(email) || !SetPassword(password)) {
-                throw std::invalid_argument(GetLastError());
+            SetUsername(param.username);
+            SetEmail(param.email);
+
+            // Check if password is hashed
+            if (!param.isPasswordHashed) {
+                SetPassword(param.password);
+            } else {
+                hashedPassword_ = param.password;
             }
         }
 
         // Getter
-        [[nodiscard]] int GetId() const {
-            return id_;
+        [[nodiscard]] int GetUserId() const {
+            return userId_;
         }
         [[nodiscard]] int GetCreatedAt() const {
-            return created_at_;
+            return createdAt_;
         }
 
         [[nodiscard]] std::string GetUsername() const {
@@ -40,12 +57,12 @@ namespace Database::Models {
         }
 
         // Setter
-        void SetId(int id) {
-            id_ = id;
+        void SetUserId(int userId) {
+            userId_ = userId;
         }
 
         void SetCreatedAt(const int createdAt) {
-            created_at_ = createdAt;
+            createdAt_ = createdAt;
         }
 
         bool SetPassword(const std::string &password);
@@ -54,19 +71,25 @@ namespace Database::Models {
 
         [[nodiscard]] bool CheckPassword(const std::string &password) const;
 
+        bool Save();
+
+        static std::optional<UserModel> FindByUserId(int userId);
+
     private:
-        static std::string hashPassword(const std::string &password);
+        [[nodiscard]] static std::string hashPassword(const std::string &password);
 
         static bool checkEmailIsValid(const std::string &email) {
             const std::regex emailRegex(R"([a-zA-Z0-9._%+-]+@[a-zA-Z0-9.-]+\.[a-zA-Z]{2,})");
             return std::regex_match(email, emailRegex);
         }
 
-        int id_;
-        int created_at_;
+        bool isPersisted_;
+        int userId_;
+        int createdAt_;
+        int updatedAt_;
         std::string username_;
         std::string email_;
-        std::string hashed_password_;
+        std::string hashedPassword_;
     };
 };  // namespace Database::Models
 

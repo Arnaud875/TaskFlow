@@ -10,13 +10,18 @@
 #error "DATABASE_SCHEMA_FILE_NAME must be defined."
 #endif
 
+#include <functional>
 #include <iostream>
 #include <memory>
+#include <optional>
 #include <sstream>
 #include <string>
 #include <string_view>
+#include <type_traits>
+#include <variant>
 #include <vector>
 
 #include "Utils/Logger/Logger.hpp"
+#include "Utils/Utils.hpp"
 
 #endif

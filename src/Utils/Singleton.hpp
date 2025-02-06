@@ -36,8 +36,8 @@ namespace Utils {
          */
         template<typename... Args>
         static T &CreateInstance(Args &&...args) {
-            assert(instance == nullptr &&
-                   "Singleton instance should not exist before calling CreateInstance");
+            assert(instance == nullptr && "Singleton instance should not exist "
+                                          "before calling CreateInstance");
 
             std::call_once(
                 init_flag,
@@ -56,13 +56,21 @@ namespace Utils {
          * @return Reference to the singleton instance
          */
         static T &GetInstance() {
-            assert(instance != nullptr &&
-                   "Singleton instance must be created before calling GetInstance");
+            assert(instance != nullptr && "Singleton instance must be created "
+                                          "before calling GetInstance");
             if (!instance) {
                 throw std::runtime_error("Singleton instance does not exist");
             }
 
             return *instance;
+        }
+
+        /**
+         * @brief Check if the singleton instance exists
+         * @return True if the singleton instance exists, false otherwise
+         */
+        static bool HasInstance() {
+            return instance != nullptr;
         }
 
         /**
@@ -73,13 +81,14 @@ namespace Utils {
         }
 
         /**
-         * @brief Create a new instance of the singleton class and handle any exception
+         * @brief Create a new instance of the singleton class and handle any
+         * exception
          * @tparam Args Types of the arguments to pass to the constructor
          * @param name Name of the singleton
          * @param args Arguments to pass to the constructor
          */
         template<typename... Args>
-        static T &SafeSingletonCreate(std::string_view name, Args&&... args) {
+        static T &SafeSingletonCreate(std::string_view name, Args &&...args) {
             try {
                 return Singleton<T>::CreateInstance(std::forward<decltype(args)>(args)...);
             } catch (const std::exception &e) {
