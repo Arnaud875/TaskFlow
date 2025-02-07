@@ -3,12 +3,42 @@
 #include "Static.hpp"
 #include <fstream>
 
-using namespace Utils::Logger;
+void Database::Database::DeleteRow(const SQLParams &params,
+                                   const std::pair<std::string, std::string> &where) const {
+    if (params.tableName.empty() || where.first.empty() || where.second.empty()) {
+        throw std::invalid_argument("Table name or values are empty");
+    }
+
+    if (!database_) {
+        throw std::runtime_error("Database is not connected");
+    }
+
+    const std::string sql =
+        "DELETE FROM " + params.tableName + " WHERE " + where.first + " = " + where.second + ";";
+    sqlite3_stmt *stmt = nullptr;
+
+    if (sqlite3_prepare_v2(database_, sql.c_str(), -1, &stmt, nullptr) != SQLITE_OK) {
+        throw std::runtime_error("Can't prepare SQL statement: " +
+                                 std::string(sqlite3_errmsg(database_)));
+    }
+
+    if (sqlite3_step(stmt) != SQLITE_DONE) {
+        sqlite3_finalize(stmt);
+        throw std::runtime_error("Can't execute SQL statement: " +
+                                 std::string(sqlite3_errmsg(database_)));
+    }
+
+    sqlite3_finalize(stmt);
+}
 
 void Database::Database::UpdateValues(const SQLParams &params,
-                                      const std::pair<std::string, std::string>& where) const {
+                                      const std::pair<std::string, std::string> &where) const {
     if (params.tableName.empty() || params.attributes.empty()) {
         throw std::invalid_argument("Table name or values are empty");
+    }
+
+    if (where.first.empty() || where.second.empty()) {
+        throw std::invalid_argument("Where clause is empty");
     }
 
     if (!database_) {
@@ -158,10 +188,7 @@ void Database::Database::Connect(const std::string &databaseFile) {
     // Check if database is already created
     if (!tableExists("Users")) {
         // Execute SQL file to create database schema
-        if (!executeSQLFile(DATABASE_SCHEMA_FILE_NAME)) {
-            throw std::runtime_error("Can't execute SQL file: Database/Init.sql, Error: " +
-                                     Logger::GetLastError());
-        }
+        executeSQLFile(DATABASE_SCHEMA_FILE_NAME);
     }
 
     LOG_INFO("Database connected successfully");
@@ -186,7 +213,7 @@ bool Database::Database::tableExists(const std::string &tableName) const {
     return exists;
 }
 
-bool Database::Database::executeSQLFile(const std::string &fileName) const {
+void Database::Database::executeSQLFile(const std::string &fileName) const {
     if (fileName.empty()) {
         throw std::invalid_argument("File name is empty");
     }
@@ -214,7 +241,6 @@ bool Database::Database::executeSQLFile(const std::string &fileName) const {
     }
 
     LOG_DEBUG("SQL file executed successfully: " + fileName);
-    return true;
 };
 
 void Database::Database::Close() {

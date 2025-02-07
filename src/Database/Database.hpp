@@ -26,7 +26,9 @@ namespace Database {
 
         void InsertValues(const SQLParams &params) const;
         void UpdateValues(const SQLParams &params,
-                          const std::pair<std::string, std::string>& where) const;
+                          const std::pair<std::string, std::string> &where) const;
+        void DeleteRow(const SQLParams &params,
+                       const std::pair<std::string, std::string> &where) const;
 
         std::vector<std::unordered_map<std::string, std::string>>
         FindAllRows(const SQLParams &params) const;
@@ -40,7 +42,7 @@ namespace Database {
 
     private:
         bool tableExists(const std::string &tableName) const;
-        bool executeSQLFile(const std::string &fileName) const;
+        void executeSQLFile(const std::string &fileName) const;
 
         static std::string sqlTypeToString(sqlite3_stmt *&stmt, int type, int index) {
             std::string value;

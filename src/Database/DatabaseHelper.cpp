@@ -2,7 +2,7 @@
 #include <map>
 
 std::pair<std::string, std::string>
-Database::FormatAttributes(const std::vector<SQLAttribute>& attributes, bool isSet) {
+Database::FormatAttributes(const std::vector<SQLAttribute> &attributes, bool isSet) {
     std::string attr;
     std::string valueAttr;
 

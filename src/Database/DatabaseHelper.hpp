@@ -13,8 +13,8 @@ namespace Database {
      * @return A pair containing the formatted attributes and the indexes of the
      * attributes
      */
-    std::pair<std::string, std::string> FormatAttributes(const std::vector<SQLAttribute>& attributes,
-                                                         bool isSet = false);
+    std::pair<std::string, std::string>
+    FormatAttributes(const std::vector<SQLAttribute> &attributes, bool isSet = false);
 }  // namespace Database
 
 #endif

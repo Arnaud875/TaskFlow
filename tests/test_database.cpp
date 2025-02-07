@@ -2,36 +2,20 @@
  * Test for the database connection
  */
 
+#include "Database/TaskManager.hpp"
+#include "Utils/Utils.hpp"
 #include <catch2/catch_test_macros.hpp>
 #include <catch2/matchers/catch_matchers_string.hpp>
 #include <filesystem>
 #include <fstream>
 #include <iostream>
 #include <string>
-#include "Utils/Singleton.hpp"
-#include "Utils/Logger/Logger.hpp"
-#include "Database/Database.hpp"
-#include "Database/Models/User.hpp"
-#include "Utils/Utils.hpp"
 
-using namespace Database;
+using namespace Database::Models;
 using namespace Utils::Logger;
+using namespace std;
 
-namespace fs = std::filesystem;
-
-inline std::string RandomStr(const int length) {
-    static const std::string alphanum =
-        "0123456789"
-        "ABCDEFGHIJKLMNOPQRSTUVWXYZ"
-        "abcdefghijklmnopqrstuvwxyz";
-
-    std::string str(length, 0);
-    std::generate_n(str.begin(), length, []() -> char {
-        return alphanum[rand() % alphanum.size()];
-    });
-
-    return str;
-}
+namespace fs = filesystem;
 
 class DatabaseConnection {
 public:
@@ -60,14 +44,14 @@ private:
 
 TEST_CASE("Test database connection", "[database]") {
     DatabaseConnection& databaseConnection = DatabaseConnection::GetInstance();
-    Models::UserModel userModel;
+    UserModel userModel;
 
     SECTION("Try to connect to the database") {
         REQUIRE_NOTHROW(databaseConnection.GetDatabase().Connect(DATABASE_FILE_NAME));
     }
 
     SECTION("Try to insert User model into Database") {
-        userModel.Create(Models::UserModel::UserAttributes{
+        userModel.Create(UserModel::UserAttributes{
             .userId = 1,
             .username = "Admin",
             .email = "admin@gmail.com",
@@ -78,8 +62,8 @@ TEST_CASE("Test database connection", "[database]") {
     }
 
     SECTION("Try to find a row by attribute") {
-        std::unordered_map<std::string, std::string> result;
-        std::optional<Models::UserModel> userModel = Models::UserModel::FindByUserId(1);
+        unordered_map<string, string> result;
+        optional<UserModel> userModel = UserModel::FindByUserId(1);
         REQUIRE(userModel.has_value());
         REQUIRE(userModel.value().GetUserId() == 1);
         REQUIRE(userModel.value().GetUsername() == "Admin");
@@ -88,30 +72,131 @@ TEST_CASE("Test database connection", "[database]") {
     }
 
     SECTION("Try to get all rows from the database") {
-        Models::UserModel userModel;
-        userModel.Create(Models::UserModel::UserAttributes{
-            .username = "Soso",
-            .email = "soso@gmail.com",
-            .password = "soso"
+        UserModel userModel;
+        userModel.Create(UserModel::UserAttributes{
+            2,
+            "Soso",
+            "soso@gmail.com",
+            "soso"
         });
 
         REQUIRE(userModel.Save());
 
-        decltype(std::declval<Database::Database>().FindAllRows({})) result; // Au top
-        REQUIRE_NOTHROW(result = databaseConnection.GetDatabase().FindAllRows(SQLParams{"Users", {}}));
+        decltype(declval<Database::Database>().FindAllRows({})) result; // Au top
+        REQUIRE_NOTHROW(result = databaseConnection.GetDatabase().FindAllRows(Database::SQLParams{"Users", {}}));
         REQUIRE(result.size() == 2);
     }
 
     SECTION("Try to update the User model") {
-        Models::UserModel userModel = Models::UserModel::FindByUserId(2).value();
+        UserModel userModel = UserModel::FindByUserId(2).value();
         userModel.SetUsername("Soso2");
         userModel.SetPassword("soso2");
 
         REQUIRE(userModel.Save());
 
-        userModel = Models::UserModel::FindByUserId(2).value();
+        userModel = UserModel::FindByUserId(2).value();
         REQUIRE(userModel.GetUsername() == "Soso2");
         REQUIRE(userModel.CheckPassword("soso2"));
+    }
+
+    SECTION("Try to delete the User model") {
+        UserModel userModel = UserModel::FindByUserId(2).value();
+        REQUIRE(userModel.Delete());
+
+        optional<UserModel> result = UserModel::FindByUserId(2);
+        REQUIRE_FALSE(result.has_value());
+    }
+
+    SECTION("Try to create Task model") {
+        UserModel userModel = UserModel::FindByUserId(1).value();
+        TasksModel task;
+
+        task.Create(TasksModel::TaskAttributes{
+            1,
+            userModel.GetUserId(),
+            "Task 1",
+            "Description 1",
+            TasksModel::TaskPriority::LOW,
+            TasksModel::TaskStatus::PENDING,
+            0,
+            0,
+            0
+        });
+
+        REQUIRE(task.Save());
+    }
+
+    SECTION("Try to find a task by id") {
+        UserModel userModel = UserModel::FindByUserId(1).value();
+        optional<TasksModel> task = TasksModel::FindTaskById(1);
+
+        REQUIRE(task.has_value());
+        REQUIRE(task.value().GetTaskId() == 1);
+        REQUIRE(task.value().GetTitle() == "Task 1");
+        REQUIRE(task.value().GetDescription() == "Description 1");
+        REQUIRE(task.value().GetPriority() == TasksModel::TaskPriority::LOW);
+        REQUIRE(task.value().GetStatus() == TasksModel::TaskStatus::PENDING);
+        REQUIRE(task.value().GetUserId() == userModel.GetUserId());
+        REQUIRE(task.value().GetUser().GetUserId() == userModel.GetUserId());
+    }
+
+    SECTION("Try to update a task by id") {
+        TasksModel task = TasksModel::FindTaskById(1).value();
+        task.SetDescription("Description modified");
+        task.SetPriority(TasksModel::TaskPriority::HIGH);
+        task.SetStatus(TasksModel::TaskStatus::IN_PROGRESS);
+        task.SetLimitDate(1000);
+        REQUIRE(task.Save());
+
+        task = TasksModel::FindTaskById(1).value();
+        REQUIRE(task.GetDescription() == "Description modified");
+        REQUIRE(task.GetPriority() == TasksModel::TaskPriority::HIGH);
+        REQUIRE(task.GetStatus() == TasksModel::TaskStatus::IN_PROGRESS);
+        REQUIRE(task.GetLimitDate() == 1000);
+    }
+
+    SECTION("Try to delete a task") {
+        TasksModel task = TasksModel::FindTaskById(1).value();
+        REQUIRE(task.Delete());
+
+        optional<TasksModel> result = TasksModel::FindTaskById(1);
+        REQUIRE_FALSE(result.has_value());
+    }
+
+    SECTION("Try to get all tasks of user") {
+        UserModel user = UserModel::FindByUserId(1).value();
+        vector<TasksModel> implementsTask;
+        implementsTask.reserve(10);
+
+        for (int i = 0; i < 10; i++) {
+            TasksModel task;
+            task.Create(TasksModel::TaskAttributes{
+                i + 1,
+                user.GetUserId(),
+                "Task " + to_string(i + 1),
+                "Description " + to_string(i + 1),
+                TasksModel::TaskPriority::LOW,
+                TasksModel::TaskStatus::PENDING,
+                0,
+                0,
+                0
+            });
+
+            REQUIRE(task.Save());
+            implementsTask.emplace_back(move(task));
+        }
+
+        vector<TasksModel> tasks = Database::TaskManager::GetAllTaskByUserId(user.GetUserId());
+        REQUIRE(tasks.size() == 10);
+
+        for (int i = 0; i < 10; i++) {
+            REQUIRE(tasks[i].GetTaskId() == implementsTask[i].GetTaskId());
+            REQUIRE(tasks[i].GetTitle() == implementsTask[i].GetTitle());
+            REQUIRE(tasks[i].GetDescription() == implementsTask[i].GetDescription());
+            REQUIRE(tasks[i].GetPriority() == implementsTask[i].GetPriority());
+            REQUIRE(tasks[i].GetStatus() == implementsTask[i].GetStatus());
+            REQUIRE(tasks[i].GetUserId() == implementsTask[i].GetUserId());
+        }
     }
 
     SECTION("Try to close the database connection") {

@@ -45,39 +45,36 @@ namespace Utils::Logger {
                   LogsLevel level,
                   const SourceLocation &loc,
                   Args &&...args) noexcept {
-            if constexpr (!DEV_MODE) {
-                // Pre-allocate memory for the buffer
-                static thread_local std::string buffer;
-                buffer.clear();
-                buffer.reserve(256);
+            // Pre-allocate memory for the buffer
+            static thread_local std::string buffer;
+            buffer.clear();
+            buffer.reserve(256);
 
-                buffer.append(logsLevelString[static_cast<size_t>(level)]);
-                buffer.append(" ");
-                buffer.append(loc.fileName());
-                buffer.append(":");
-                buffer.append(loc.functionName());
-                buffer.append("(");
+            buffer.append(logsLevelString[static_cast<size_t>(level)]);
+            buffer.append(" ");
+            buffer.append(loc.fileName());
+            buffer.append(":");
+            buffer.append(loc.functionName());
+            buffer.append("(");
 
-                // Using snprintf to format integer to string (More optimized
-                // than std::to_string)
-                char lineBuffer[16];
-                const int lineLength =
-                    std::snprintf(lineBuffer, sizeof(lineBuffer), "%d", loc.line());
+            // Using snprintf to format integer to string (More optimized
+            // than std::to_string)
+            char lineBuffer[16];
+            const int lineLength = std::snprintf(lineBuffer, sizeof(lineBuffer), "%d", loc.line());
 
-                buffer.append(lineBuffer, lineLength);
-                buffer.append("): ");
+            buffer.append(lineBuffer, lineLength);
+            buffer.append("): ");
 
-                if constexpr (sizeof...(args) > 0) {
-                    buffer.append(FormatStringLogs(message, std::forward<Args>(args)...));
-                } else {
-                    buffer.append(message);
-                }
-
-                buffer.append("\n");
-
-                // Unique write to the console
-                std::fwrite(buffer.data(), 1, buffer.size(), stdout);
+            if constexpr (sizeof...(args) > 0) {
+                buffer.append(FormatStringLogs(message, std::forward<Args>(args)...));
+            } else {
+                buffer.append(message);
             }
+
+            buffer.append("\n");
+
+            // Unique write to the console
+            std::fwrite(buffer.data(), 1, buffer.size(), stdout);
         }
 
         /**

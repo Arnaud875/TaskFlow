@@ -14,21 +14,24 @@ std::optional<Database::Models::UserModel> Database::Models::UserModel::FindByUs
     try {
         const auto &userResult = result.value();
         UserModel userModel;
-        userModel.Create(UserAttributes{.userId = std::stoi(userResult.at("id")),
-                                        .username = userResult.at("username"),
-                                        .email = userResult.at("email"),
-                                        .password = userResult.at("password"),
-                                        .createdAt = std::stoi(userResult.at("created_at")),
-                                        .updatedAt = std::stoi(userResult.at("updated_at")),
-                                        .isPersisted = true,
-                                        .isPasswordHashed = true});
-        return userModel;
+        userModel.Create(UserAttributes{std::stoi(userResult.at("id")),
+                                        userResult.at("username"),
+                                        userResult.at("email"),
+                                        userResult.at("password"),
+                                        std::stoi(userResult.at("created_at")),
+                                        std::stoi(userResult.at("updated_at")),
+                                        true,
+                                        true});
+        return std::move(userModel);
     } catch (const std::exception &e) {
         return std::nullopt;
     }
 }
 
 bool Database::Models::UserModel::Save() {
+    if (userId_ == 0)
+        throw std::invalid_argument("The model is not initialized.");
+
     if (!isPersisted_) {
         const SQLParams params = {
             "Users", {{"username", username_}, {"email", email_}, {"password", hashedPassword_}}};
@@ -78,7 +81,25 @@ bool Database::Models::UserModel::Save() {
     return true;
 }
 
-bool Database::Models::UserModel::SetUsername(const std::string &username) {
+bool Database::Models::UserModel::Delete() {
+    if (!isPersisted_) {
+        return false;
+    }
+
+    const auto result = Utils::SafeInvoke(&Database::DeleteRow,
+                                          GetDatabase(),
+                                          SQLParams{"Users", {}},
+                                          std::make_pair("id", std::to_string(userId_)));
+
+    if (!result) {
+        return false;
+    }
+
+    isPersisted_ = false;
+    return true;
+}
+
+void Database::Models::UserModel::SetUsername(const std::string &username) {
     const std::size_t usernameSize = username.size();
     if (username.empty() || (usernameSize < 3 || usernameSize > 20)) {
         throw std::invalid_argument("Username must be between 3 and 20 characters.");
@@ -89,10 +110,9 @@ bool Database::Models::UserModel::SetUsername(const std::string &username) {
     }
 
     username_ = username;
-    return true;
 }
 
-bool Database::Models::UserModel::SetEmail(const std::string &email) {
+void Database::Models::UserModel::SetEmail(const std::string &email) {
     if (!checkEmailIsValid(email)) {
         throw std::invalid_argument("Email is not valid.");
     }
@@ -102,10 +122,9 @@ bool Database::Models::UserModel::SetEmail(const std::string &email) {
     }
 
     email_ = email;
-    return true;
 }
 
-bool Database::Models::UserModel::SetPassword(const std::string &password) {
+void Database::Models::UserModel::SetPassword(const std::string &password) {
     if (password.empty()) {
         throw std::invalid_argument("Password must not be empty.");
     }
@@ -116,7 +135,6 @@ bool Database::Models::UserModel::SetPassword(const std::string &password) {
     }
 
     hashedPassword_ = hashedPassword;
-    return true;
 }
 
 std::string Database::Models::UserModel::hashPassword(const std::string &password) {

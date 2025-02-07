@@ -65,13 +65,14 @@ namespace Database::Models {
             createdAt_ = createdAt;
         }
 
-        bool SetPassword(const std::string &password);
-        bool SetUsername(const std::string &username);
-        bool SetEmail(const std::string &email);
+        void SetPassword(const std::string &password);
+        void SetUsername(const std::string &username);
+        void SetEmail(const std::string &email);
 
         [[nodiscard]] bool CheckPassword(const std::string &password) const;
 
         bool Save();
+        bool Delete();
 
         static std::optional<UserModel> FindByUserId(int userId);
 
