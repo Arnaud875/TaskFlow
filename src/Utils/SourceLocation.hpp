@@ -10,7 +10,7 @@ namespace Utils {
      */
     struct SourceLocation {
         constexpr SourceLocation() noexcept
-            : fileName_(nullptr), functionName_(nullptr), line_(0), column_(0){};
+            : fileName_(nullptr), functionName_(nullptr), line_(0), column_(0) {};
 
         /**
          * @brief Get the current source location

@@ -8,6 +8,12 @@ namespace Database::Models {
     template<typename T, typename = void, typename... Args>
     struct HasCreateImpl : std::false_type {};
 
+    /**
+     * @brief A helper struct to check if a class has CreateImpl method
+     *
+     * @tparam T The class to check
+     * @tparam Args The arguments of the CreateImpl method
+     */
     template<typename T, typename... Args>
     struct HasCreateImpl<
         T,
@@ -17,19 +23,23 @@ namespace Database::Models {
     template<typename T, typename... Args>
     inline constexpr bool HAS_CREATE_IMPL_V = HasCreateImpl<T, void, Args...>::value;
 
-    // template<typename T, typename = void>
-    // struct HasSaveImpl : std::false_type {};
-
-    // template<typename T>
-    // struct HasSaveImpl<T, std::void_t<decltype(std::declval<T>().SaveImpl())>> : std::true_type
-    // {};
-
+    /**
+     * @brief The BaseModel class to be inherited by all models
+     *
+     * @tparam T The derived class
+     */
     template<typename T>
     class BaseModel {
     public:
         BaseModel() = default;
         virtual ~BaseModel() = default;
 
+        /**
+         * @brief Check if the derived class has CreateImpl method and call it
+         *
+         * @tparam Args The type arguments of the CreateImpl method
+         * @param args The arguments of the CreateImpl method
+         */
         template<typename... Args>
         void Create(Args &&...args) {
             static_assert(HAS_CREATE_IMPL_V<T, std::decay_t<Args>...>,
@@ -37,30 +47,24 @@ namespace Database::Models {
             static_cast<T *>(this)->CreateImpl(std::forward<Args>(args)...);
         }
 
-        // void Save() {
-        //     static_assert(HasSaveImpl<T>::value, "Derived class must implement SaveImpl method");
-        //     static_cast<T *>(this)->SaveImpl();
-        // }
-
-        [[nodiscard]] std::string GetLastError() const {
-            return last_error_;
-        };
-
     protected:
+        /**
+         * @brief CreateImpl method to be implemented by the derived class
+         *
+         * @tparam Args The type arguments of the CreateImpl method
+         * @param args The arguments of the CreateImpl method
+         */
         template<typename... Args>
         void CreateImpl(Args &&...args) = delete;
-        // void SaveImpl() = delete;
 
-        void SetLastError(const std::string &error) {
-            last_error_ = error;
-        };
-
+        /**
+         * @brief Get the unique instance of the Database class
+         *
+         * @return The unique instance of the Database class
+         */
         Database &GetDatabase() {
             return Database::Database::GetInstance();
         }
-
-    private:
-        std::string last_error_;
     };
 };  // namespace Database::Models
 

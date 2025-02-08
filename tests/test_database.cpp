@@ -4,6 +4,7 @@
 
 #include "Database/TaskManager.hpp"
 #include "Utils/Logger/Logger.hpp"
+#include "Database/TaskManager.hpp"
 #include <catch2/catch_test_macros.hpp>
 #include <catch2/matchers/catch_matchers_string.hpp>
 #include <filesystem>
@@ -128,7 +129,7 @@ TEST_CASE("Test database connection", "[database]") {
 
     SECTION("Try to find a task by id") {
         UserModel userModel = UserModel::FindByUserId(1).value();
-        optional<TasksModel> task = TasksModel::FindTaskById(1);
+        optional<TasksModel> task = Database::TaskManager::FindTaskById(1);
 
         REQUIRE(task.has_value());
         REQUIRE(task.value().GetTaskId() == 1);
@@ -141,14 +142,14 @@ TEST_CASE("Test database connection", "[database]") {
     }
 
     SECTION("Try to update a task by id") {
-        TasksModel task = TasksModel::FindTaskById(1).value();
+        TasksModel task = Database::TaskManager::FindTaskById(1).value();
         task.SetDescription("Description modified");
         task.SetPriority(TasksModel::TaskPriority::HIGH);
         task.SetStatus(TasksModel::TaskStatus::IN_PROGRESS);
         task.SetLimitDate(1000);
         REQUIRE(task.Save());
 
-        task = TasksModel::FindTaskById(1).value();
+        task = Database::TaskManager::FindTaskById(1).value();
         REQUIRE(task.GetDescription() == "Description modified");
         REQUIRE(task.GetPriority() == TasksModel::TaskPriority::HIGH);
         REQUIRE(task.GetStatus() == TasksModel::TaskStatus::IN_PROGRESS);
@@ -156,10 +157,10 @@ TEST_CASE("Test database connection", "[database]") {
     }
 
     SECTION("Try to delete a task") {
-        TasksModel task = TasksModel::FindTaskById(1).value();
+        TasksModel task = Database::TaskManager::FindTaskById(1).value();
         REQUIRE(task.Delete());
 
-        optional<TasksModel> result = TasksModel::FindTaskById(1);
+        optional<TasksModel> result = Database::TaskManager::FindTaskById(1);
         REQUIRE_FALSE(result.has_value());
     }
 

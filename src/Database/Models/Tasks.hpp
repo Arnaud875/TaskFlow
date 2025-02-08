@@ -5,11 +5,17 @@
 #include "Database/Models/User.hpp"
 
 namespace Database::Models {
+    /**
+     * @brief A class that represents the tasks table in the database.
+     */
     class TasksModel : public BaseModel<TasksModel> {
     public:
         enum class TaskPriority : std::uint8_t { LOW = 0, MEDIUM = 1, HIGH = 2 };
         enum class TaskStatus : std::uint8_t { PENDING = 0, IN_PROGRESS = 1, DONE = 2 };
 
+        /**
+         * @brief A struct that contains the attributes of a task.
+         */
         struct TaskAttributes {
             int taskId;
             int userId;
@@ -25,6 +31,11 @@ namespace Database::Models {
 
         TasksModel() = default;
 
+        /**
+         * @brief Construct a new Tasks Model object
+         *
+         * @param params Required attributes to create a new task.
+         */
         void CreateImpl(const TaskAttributes &params) {
             if (params.title.empty() || params.description.empty()) {
                 throw std::invalid_argument("Title and description must not be empty.");
@@ -43,10 +54,17 @@ namespace Database::Models {
             SetDescription(params.description);
         }
 
+        /**
+         * @brief Insert the task into the database if it's not persisted yet or update it.
+         */
         bool Save();
-        bool Delete();
 
-        static std::optional<TasksModel> FindTaskById(int taskId);
+        /**
+         * @brief Delete the task from the database if it's persisted.
+         *
+         * @return Return true if the task is deleted successfully.
+         */
+        bool Delete();
 
         // Setter
         void SetTitle(const std::string &title);
@@ -69,6 +87,11 @@ namespace Database::Models {
         }
 
         // Getter
+        /**
+         * @brief Get the user that owns the task.
+         *
+         * @return Return the user object.
+         */
         UserModel GetUser() const {
             return UserModel::FindByUserId(userId_).value();
         }

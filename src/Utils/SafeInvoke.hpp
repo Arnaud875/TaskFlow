@@ -1,12 +1,22 @@
 #ifndef UTILS_SAFE_INVOKE_H_
 #define UTILS_SAFE_INVOKE_H_
 
+#include "Logger/Logger.hpp"
+#include <iostream>
 #include <optional>
 #include <type_traits>
-#include <iostream>
-#include "Logger/Logger.hpp"
 
 namespace Utils {
+    /**
+     * @brief Calls a function and catches any exception that may be thrown
+     *
+     * @tparam Func Type of the function to call
+     * @tparam Args Type of the arguments to pass to the function
+     * @param function Function to call
+     * @param args Arguments to pass to the function
+     * @return Returns the result of the function if it is not void, otherwise returns
+     * std::monostate
+     */
     template<typename Func, typename... Args>
     std::optional<std::conditional_t<std::is_void_v<std::invoke_result_t<Func, Args...>>,
                                      std::monostate,

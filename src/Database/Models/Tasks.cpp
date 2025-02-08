@@ -1,35 +1,6 @@
 #include "Tasks.hpp"
+#include "Database/TaskManager.hpp"
 #include "Utils/SafeInvoke.hpp"
-
-std::optional<Database::Models::TasksModel> Database::Models::TasksModel::FindTaskById(int taskId) {
-    const auto result = Utils::SafeInvoke(&Database::FindRowByAttributes,
-                                          Database::GetInstance(),
-                                          SQLParams{"Tasks", {{"id", std::to_string(taskId)}}});
-
-    if (!result.has_value() || result.value().empty()) {
-        return std::nullopt;
-    }
-
-    try {
-        const auto &taskResult = result.value();
-        TasksModel task;
-
-        task.Create(TaskAttributes{std::stoi(taskResult.at("id")),
-                                   std::stoi(taskResult.at("user_id")),
-                                   taskResult.at("title"),
-                                   taskResult.at("description"),
-                                   static_cast<TaskPriority>(std::stoi(taskResult.at("priority"))),
-                                   static_cast<TaskStatus>(std::stoi(taskResult.at("status"))),
-                                   std::stoi(taskResult.at("limited_date")),
-                                   std::stoi(taskResult.at("created_at")),
-                                   std::stoi(taskResult.at("updated_at")),
-                                   true});
-
-        return std::move(task);
-    } catch (const std::invalid_argument &e) {
-        return std::nullopt;
-    }
-}
 
 bool Database::Models::TasksModel::Delete() {
     if (taskId_ == 0) {
@@ -65,7 +36,7 @@ bool Database::Models::TasksModel::Save() {
 
         isPersisted_ = true;
     } else {
-        const std::optional<TasksModel> currentTaskOpt = FindTaskById(taskId_);
+        const std::optional<TasksModel> currentTaskOpt = TaskManager::FindTaskById(taskId_);
         TasksModel currentTask;
 
         if (!currentTaskOpt.has_value()) {

@@ -5,10 +5,14 @@
 #include <regex>
 
 namespace Database::Models {
+    /**
+     * @brief A class that represents the users table in the database.
+     */
     class UserModel : public BaseModel<UserModel> {
     public:
-        UserModel() = default;
-
+        /**
+         * @brief A struct that contains the attributes of a user.
+         */
         struct UserAttributes {
             int userId;
             std::string username;
@@ -20,6 +24,13 @@ namespace Database::Models {
             bool isPasswordHashed = false;
         };
 
+        UserModel() = default;
+
+        /**
+         * @brief Construct a new User Model object
+         *
+         * @param param Required attributes to create a new user.
+         */
         void CreateImpl(const UserAttributes &param) {
             if (param.username.empty() || param.email.empty() || param.password.empty()) {
                 throw std::invalid_argument("Username, email, and password must not be empty.");
@@ -69,16 +80,51 @@ namespace Database::Models {
         void SetUsername(const std::string &username);
         void SetEmail(const std::string &email);
 
+        /**
+         * @brief Check if the password is correct.
+         *
+         * @param password The password to check.
+         * @return Return true if the password is correct.
+         */
         [[nodiscard]] bool CheckPassword(const std::string &password) const;
 
+        /**
+         * @brief Insert the user into the database if it's not persisted yet or update it.
+         */
         bool Save();
+
+        /**
+         * @brief Delete the user from the database if it's persisted.
+         *
+         * @return Return true if the user is deleted successfully.
+         */
         bool Delete();
 
+        /**
+         * @brief Find a user by its user ID.
+         *
+         * @param userId The user ID to find.
+         * @return Return the user object if found.
+         */
+        [[nodiscard]]
         static std::optional<UserModel> FindByUserId(int userId);
 
     private:
+        /**
+         * @brief Hash the password using bcrypt.
+         *
+         * @param password The password to hash.
+         * @return Return the hashed password.
+         */
         [[nodiscard]] static std::string hashPassword(const std::string &password);
 
+        /**
+         * @brief Check if the email is valid.
+         *
+         * @param email The email to check.
+         * @return Return true if the email is valid.
+         */
+        [[nodiscard]]
         static bool checkEmailIsValid(const std::string &email) {
             const std::regex emailRegex(R"([a-zA-Z0-9._%+-]+@[a-zA-Z0-9.-]+\.[a-zA-Z]{2,})");
             return std::regex_match(email, emailRegex);

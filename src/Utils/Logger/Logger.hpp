@@ -1,15 +1,8 @@
 #ifndef UTILS_LOGGER_LOGGER_H_
 #define UTILS_LOGGER_LOGGER_H_
 
-/**
- * - Rajouter la docs pour les fonctions de la DB
- * - Finir d'ajouter les dernier modèle
- * - Finir la classe TaskManager
- * - Ajouter l'historique des tâches
- */
-
-#include "Static.hpp"
 #include "LoggerFormat.hpp"
+#include "Static.hpp"
 #include "Utils/Singleton.hpp"
 #include "Utils/SourceLocation.hpp"
 #include "Utils/Utils.hpp"
@@ -41,7 +34,11 @@ namespace Utils::Logger {
          * @brief Array of string representation of the logs level
          */
         static constexpr std::array<std::string_view, static_cast<size_t>(LogsLevel::COUNT)>
-            logsLevelString = {"\033[1;34mINFO\033[0m", "\033[33mWARNING\033[0m", "\033[1;31mERROR\033[0m", "\033[31mFATAL\033[0m", "\033[34mDEBUG\033[0m"};
+            logsLevelString = {"\033[1;34mINFO\033[0m",
+                               "\033[33mWARNING\033[0m",
+                               "\033[1;31mERROR\033[0m",
+                               "\033[31mFATAL\033[0m",
+                               "\033[34mDEBUG\033[0m"};
 
         /**
          * @brief Logs the message to the console
