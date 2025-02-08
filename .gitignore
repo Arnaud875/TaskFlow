@@ -3,6 +3,7 @@
 
 # Ignore vs config folder
 .vs/
+CMakeSettings.json
 
 # Ignore build folder
 build/

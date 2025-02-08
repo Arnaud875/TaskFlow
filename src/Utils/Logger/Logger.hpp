@@ -2,15 +2,14 @@
 #define UTILS_LOGGER_LOGGER_H_
 
 /**
- * - Rajouter les couleurs pour le Logger
  * - Rajouter la docs pour les fonctions de la DB
  * - Finir d'ajouter les dernier modèle
  * - Finir la classe TaskManager
  * - Ajouter l'historique des tâches
  */
 
-#include "LoggerFormat.hpp"
 #include "Static.hpp"
+#include "LoggerFormat.hpp"
 #include "Utils/Singleton.hpp"
 #include "Utils/SourceLocation.hpp"
 #include "Utils/Utils.hpp"
@@ -42,7 +41,7 @@ namespace Utils::Logger {
          * @brief Array of string representation of the logs level
          */
         static constexpr std::array<std::string_view, static_cast<size_t>(LogsLevel::COUNT)>
-            logsLevelString = {"INFO", "WARNING", "ERROR", "FATAL", "DEBUG"};
+            logsLevelString = {"\033[1;34mINFO\033[0m", "\033[33mWARNING\033[0m", "\033[1;31mERROR\033[0m", "\033[31mFATAL\033[0m", "\033[34mDEBUG\033[0m"};
 
         /**
          * @brief Logs the message to the console
@@ -59,8 +58,9 @@ namespace Utils::Logger {
             buffer.clear();
             buffer.reserve(256);
 
+            buffer.append("\033[32m");
             buffer.append(GetCurrentTimeStr());
-            buffer.append(" [");
+            buffer.append("\033[0m [");
             buffer.append(logsLevelString[static_cast<size_t>(level)]);
             buffer.append("] [");
             buffer.append(loc.fileName());

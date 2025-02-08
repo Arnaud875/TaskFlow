@@ -3,7 +3,7 @@
  */
 
 #include "Database/TaskManager.hpp"
-#include "Utils/Utils.hpp"
+#include "Utils/Logger/Logger.hpp"
 #include <catch2/catch_test_macros.hpp>
 #include <catch2/matchers/catch_matchers_string.hpp>
 #include <filesystem>
@@ -52,10 +52,10 @@ TEST_CASE("Test database connection", "[database]") {
 
     SECTION("Try to insert User model into Database") {
         userModel.Create(UserModel::UserAttributes{
-            .userId = 1,
-            .username = "Admin",
-            .email = "admin@gmail.com",
-            .password = "admin"
+            1,
+            "Admin",
+            "admin@gmail.com",
+            "admin"
         });
 
         REQUIRE(userModel.Save());

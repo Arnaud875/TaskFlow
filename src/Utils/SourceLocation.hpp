@@ -70,7 +70,7 @@ namespace Utils {
             const char *path = filePath;
 
             while (*filePath) {
-                if (*filePath == '/')
+                if (*filePath == '/' || *filePath == '\\')
                     path = filePath + 1;
                 filePath++;
             }
