@@ -1,4 +1,5 @@
 #include "TaskManager.hpp"
+#include "Utils/SafeInvoke.hpp"
 
 using namespace Database;
 

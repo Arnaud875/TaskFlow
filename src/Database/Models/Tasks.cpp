@@ -1,4 +1,5 @@
 #include "Tasks.hpp"
+#include "Utils/SafeInvoke.hpp"
 
 std::optional<Database::Models::TasksModel> Database::Models::TasksModel::FindTaskById(int taskId) {
     const auto result = Utils::SafeInvoke(&Database::FindRowByAttributes,

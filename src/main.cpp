@@ -5,6 +5,8 @@ int main() {
     Utils::Logger::Logger &logger = Utils::Logger::Logger::CreateInstance();
     Database::Database &database = Database::Database::CreateInstance();
 
+    LOG_INFO("Hello, {} !", "World");
+
     // try {
     //     database.Connect();
     //     database.Close();

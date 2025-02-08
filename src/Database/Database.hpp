@@ -1,9 +1,9 @@
 #ifndef DATABASE_DATABASE_H_
 #define DATABASE_DATABASE_H_
 
+#include "Static.hpp"
 #include "Utils/Singleton.hpp"
 #include <sqlite3.h>
-#include <unordered_map>
 
 namespace Database {
     struct SQLAttribute {

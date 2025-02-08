@@ -1,7 +1,8 @@
 #ifndef UTILS_LOGGER_LOGGERFORMAT_H_
 #define UTILS_LOGGER_LOGGERFORMAT_H_
 
-#include "Static.hpp"
+#include <string>
+#include <string_view>
 
 namespace Utils::Logger {
     /**

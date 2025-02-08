@@ -1,4 +1,5 @@
 #include "User.hpp"
+#include "Utils/SafeInvoke.hpp"
 #include <bcrypt.h>
 #include <sqlite3.h>
 

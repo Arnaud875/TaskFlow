@@ -1,6 +1,6 @@
 #include "Database.hpp"
 #include "DatabaseHelper.hpp"
-#include "Static.hpp"
+#include "Utils/Logger/Logger.hpp"
 #include <fstream>
 
 void Database::Database::DeleteRow(const SQLParams &params,

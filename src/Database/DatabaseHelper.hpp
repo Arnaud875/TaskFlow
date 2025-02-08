@@ -2,9 +2,7 @@
 #define DATABASE_DATABASEHELPER_H_
 
 #include "Database.hpp"
-#include <string>
-#include <utility>
-#include <vector>
+#include "Static.hpp"
 
 namespace Database {
     /**

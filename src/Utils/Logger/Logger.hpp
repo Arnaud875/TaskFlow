@@ -1,10 +1,19 @@
 #ifndef UTILS_LOGGER_LOGGER_H_
 #define UTILS_LOGGER_LOGGER_H_
 
+/**
+ * - Rajouter les couleurs pour le Logger
+ * - Rajouter la docs pour les fonctions de la DB
+ * - Finir d'ajouter les dernier modèle
+ * - Finir la classe TaskManager
+ * - Ajouter l'historique des tâches
+ */
+
 #include "LoggerFormat.hpp"
 #include "Static.hpp"
 #include "Utils/Singleton.hpp"
 #include "Utils/SourceLocation.hpp"
+#include "Utils/Utils.hpp"
 #include <array>
 
 namespace Utils::Logger {
@@ -50,8 +59,10 @@ namespace Utils::Logger {
             buffer.clear();
             buffer.reserve(256);
 
+            buffer.append(GetCurrentTimeStr());
+            buffer.append(" [");
             buffer.append(logsLevelString[static_cast<size_t>(level)]);
-            buffer.append(" ");
+            buffer.append("] [");
             buffer.append(loc.fileName());
             buffer.append(":");
             buffer.append(loc.functionName());
@@ -63,7 +74,7 @@ namespace Utils::Logger {
             const int lineLength = std::snprintf(lineBuffer, sizeof(lineBuffer), "%d", loc.line());
 
             buffer.append(lineBuffer, lineLength);
-            buffer.append("): ");
+            buffer.append(")] ");
 
             if constexpr (sizeof...(args) > 0) {
                 buffer.append(FormatStringLogs(message, std::forward<Args>(args)...));
