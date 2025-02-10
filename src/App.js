@@ -3,15 +3,25 @@ import { ConfigProvider, Typography, Button, Modal } from "antd";
 const { Title } = Typography;
 
 export default function App() {
-  const [isModelOpen, setIsModelOpen] = useState(false);
+  const [isModalOpen, setIsModalOpen] = useState(false);
+  const [isModalLoading, setIsModalLoading] = useState(false);
+  const [message, setMessage] = useState("Waiting api...");
 
-  const showModal = () => {
-    setIsModelOpen(true);
-  };
+  const showLoading = () => {
+    setIsModalOpen(true);
+    setIsModalLoading(true);
 
-  const handleOkAndCancel = () => {
-    setIsModelOpen(false);
-  };
+    fetch("http://localhost:8080/api/test")
+      .then(async (response) => {
+        if (response.status === 200) {
+          const data = await response.json();
+          setMessage(data["message"]);
+        } else {
+          setMessage("API call failed!");
+        }
+        setIsModalLoading(false);
+      });
+  }
 
   return (
     <ConfigProvider>
@@ -24,13 +34,13 @@ export default function App() {
         gap: '20px'
       }}>
         <Title level={1}>Hello, World !</Title>
-        <Button type="primary" size="large" onClick={showModal}>
+        <Button type="primary" size="large" onClick={showLoading}>
           Click Me!
         </Button>
       </div>
 
-      <Modal title="Hello, World !" open={isModelOpen} onOk={handleOkAndCancel} onCancel={handleOkAndCancel}>
-        <p>Hello my friend !</p>
+      <Modal title="Hello, World !" loading={isModalLoading} open={isModalOpen} onOk={() => setIsModalOpen(false)} onCancel={() => setIsModalOpen(false)}>
+        <p>{message}</p>
       </Modal>
     </ConfigProvider>
   )
