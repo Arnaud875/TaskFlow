@@ -52,6 +52,7 @@ target_link_libraries(TaskFlow_lib PUBLIC
     Threads::Threads
     Crow::Crow
     asio::asio
+    asio::asio
     unofficial::sqlite3::sqlite3
     nlohmann_json::nlohmann_json
     bcrypt

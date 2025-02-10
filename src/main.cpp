@@ -1,18 +1,27 @@
 #include "Database/Database.hpp"
 #include "Utils/Logger/Logger.hpp"
+#include "Api/RouteManager.hpp"
+#include <crow.h>
 
 int main() {
-    Utils::Logger::Logger &logger = Utils::Logger::Logger::CreateInstance();
-    Database::Database &database = Database::Database::CreateInstance();
+    Utils::Logger::Logger::SafeSingletonCreate("Logger");
+    Database::Database &database = Database::Database::SafeSingletonCreate("Database");
 
-    LOG_INFO("Hello, {} !", "World");
+    crow::SimpleApp app;
 
-    // try {
-    //     database.Connect();
-    //     database.Close();
-    // } catch (const std::exception &e) {
-    //     LOG_FATAL(e.what());
-    // }
+    try {
+        database.Connect(DATABASE_FILE_NAME);
+
+        Api::RouteManager &routeManager = Api::RouteManager::CreateInstance(app);
+        routeManager.SetupStaticRoutes();
+        routeManager.SetupRoutes();
+    } catch (const std::exception &e) {
+        if (database.IsConnected()) {
+            database.Close();
+        }
+
+        return 1;
+    }
 
     return 0;
 }
