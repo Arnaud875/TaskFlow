@@ -45,20 +45,19 @@ find_package(Crow CONFIG REQUIRED)
 find_package(nlohmann_json CONFIG REQUIRED)
 find_package(unofficial-sqlite3 CONFIG REQUIRED)
 
-# Créer une bibliothèque avec les sources
 add_library(TaskFlow_lib STATIC ${ALL_SOURCE_FILES})
 
-# Configurer la bibliothèque
 target_include_directories(TaskFlow_lib PUBLIC ${CMAKE_SOURCE_DIR}/src)
 target_link_libraries(TaskFlow_lib PUBLIC 
     Threads::Threads
     Crow::Crow
+    asio::asio
     unofficial::sqlite3::sqlite3
     nlohmann_json::nlohmann_json
     bcrypt
 )
 
-# Ajouter les définitions à la bibliothèque
+# Add compile definitions
 target_compile_definitions(TaskFlow_lib PUBLIC 
     DATABASE_FILE_NAME="${DATABASE_FILE_NAME}"
     DATABASE_SCHEMA_FILE_NAME="${DATABASE_SCHEMA_FILE_NAME}"
@@ -67,7 +66,6 @@ target_compile_definitions(TaskFlow_lib PUBLIC
 
 target_precompile_headers(TaskFlow_lib PUBLIC "src/Static.hpp")
 
-# Modifier l'exécutable pour utiliser la bibliothèque
 add_executable(TaskFlow src/main.cpp)
 target_link_libraries(TaskFlow PRIVATE TaskFlow_lib)
 

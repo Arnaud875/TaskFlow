@@ -17,6 +17,8 @@ void Database::Database::DeleteRow(const SQLParams &params,
         "DELETE FROM " + params.tableName + " WHERE " + where.first + " = " + where.second + ";";
     sqlite3_stmt *stmt = nullptr;
 
+    LOG_DEBUG("Executing SQL statement: " + sql);
+
     if (sqlite3_prepare_v2(database_, sql.c_str(), -1, &stmt, nullptr) != SQLITE_OK) {
         throw std::runtime_error("Can't prepare SQL statement: " +
                                  std::string(sqlite3_errmsg(database_)));
@@ -50,6 +52,8 @@ void Database::Database::UpdateValues(const SQLParams &params,
                                where.first + " = " + where.second + ";";
     sqlite3_stmt *stmt = nullptr;
 
+    LOG_DEBUG("Executing SQL statement: " + sqlStr);
+
     if (sqlite3_prepare_v2(database_, sqlStr.c_str(), -1, &stmt, nullptr) != SQLITE_OK) {
         throw std::runtime_error("Can't prepare SQL statement: " +
                                  std::string(sqlite3_errmsg(database_)));
@@ -80,6 +84,8 @@ void Database::Database::InsertValues(const SQLParams &params) const {
 
     const auto [sql, sqlValue] = FormatAttributes(params.attributes);
     const std::string sqlStr = "INSERT INTO " + params.tableName + sql + " VALUES " + sqlValue;
+
+    LOG_DEBUG("Executing SQL statement: " + sqlStr);
 
     sqlite3_stmt *stmt = nullptr;
     if (sqlite3_prepare_v2(database_, sqlStr.c_str(), -1, &stmt, nullptr) != SQLITE_OK) {
@@ -113,6 +119,8 @@ Database::Database::FindAllRows(const SQLParams &params) const {
 
     const std::string sql = "SELECT * FROM " + params.tableName + ";";
     sqlite3_stmt *stmt = nullptr;
+
+    LOG_DEBUG("Executing SQL statement: " + sql);
 
     if (sqlite3_prepare_v2(database_, sql.c_str(), -1, &stmt, nullptr) != SQLITE_OK) {
         throw std::runtime_error("Can't prepare SQL statement: " +
@@ -151,6 +159,8 @@ Database::Database::FindRowByAttributes(const SQLParams &params) const {
         "SELECT * FROM " + params.tableName + " WHERE " + params.attributes[0].name + " = ?;";
     sqlite3_stmt *stmt = nullptr;
 
+    LOG_DEBUG("Executing SQL statement: " + sql);
+
     if (sqlite3_prepare_v2(database_, sql.c_str(), -1, &stmt, nullptr) != SQLITE_OK) {
         throw std::runtime_error("Can't prepare SQL statement: " +
                                  std::string(sqlite3_errmsg(database_)));
@@ -180,6 +190,13 @@ Database::Database::FindRowByAttributes(const SQLParams &params) const {
 }
 
 void Database::Database::Connect(const std::string &databaseFile) {
+    LOG_INFO("Connecting to the local database...");
+
+    if (database_) {
+        LOG_WARNING("Database is already connected");
+        return;
+    }
+
     const int result = sqlite3_open(databaseFile.c_str(), &database_);
     if (result != SQLITE_OK) {
         throw std::runtime_error("Can't open database: " + std::string(sqlite3_errmsg(database_)));
