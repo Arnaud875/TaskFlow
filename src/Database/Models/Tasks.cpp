@@ -1,13 +1,13 @@
 #include "Tasks.hpp"
 #include "Database/TaskManager.hpp"
-#include "Utils/SafeInvoke.hpp"
+#include "Utils/Meta/SafeInvoke.hpp"
 
 bool Database::Models::TasksModel::Delete() {
     if (taskId_ == 0) {
         throw std::invalid_argument("The model is not initialized.");
     }
 
-    const auto result = Utils::SafeInvoke(&Database::DeleteRow,
+    const auto result = Utils::Meta::SafeInvoke(&Database::DeleteRow,
                                           GetDatabase(),
                                           SQLParams{"Tasks", {}},
                                           std::make_pair("id", std::to_string(taskId_)));
@@ -28,7 +28,7 @@ bool Database::Models::TasksModel::Save() {
                                    {"priority", std::to_string(static_cast<int>(priority_))},
                                    {"status", std::to_string(static_cast<int>(status_))}}};
 
-        const auto result = Utils::SafeInvoke(&Database::InsertValues, GetDatabase(), params);
+        const auto result = Utils::Meta::SafeInvoke(&Database::InsertValues, GetDatabase(), params);
 
         if (!result) {
             return false;
@@ -73,7 +73,7 @@ bool Database::Models::TasksModel::Save() {
             return true;
         }
 
-        const auto result = Utils::SafeInvoke(&Database::UpdateValues,
+        const auto result = Utils::Meta::SafeInvoke(&Database::UpdateValues,
                                               GetDatabase(),
                                               params,
                                               std::make_pair("id", std::to_string(taskId_)));

@@ -1,11 +1,11 @@
 #include "TaskManager.hpp"
-#include "Utils/SafeInvoke.hpp"
+#include "Utils/Meta/SafeInvoke.hpp"
 
 using namespace Database;
 using namespace Models;
 
 std::optional<TasksModel> TaskManager::FindTaskById(int taskId) {
-    const auto result = Utils::SafeInvoke(&Database::FindRowByAttributes,
+    const auto result = Utils::Meta::SafeInvoke(&Database::FindRowByAttributes,
                                           Database::GetInstance(),
                                           SQLParams{"Tasks", {{"id", std::to_string(taskId)}}});
 
@@ -38,7 +38,7 @@ std::optional<TasksModel> TaskManager::FindTaskById(int taskId) {
 std::vector<TasksModel> TaskManager::GetAllTaskByUserId(int userId) {
     std::vector<TasksModel> tasks;
     const auto result =
-        Utils::SafeInvoke(&Database::FindAllRows,
+        Utils::Meta::SafeInvoke(&Database::FindAllRows,
                           Database::GetInstance(),
                           SQLParams{"Tasks", {{"user_id", std::to_string(userId)}}});
 

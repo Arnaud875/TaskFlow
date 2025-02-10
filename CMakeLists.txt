@@ -52,7 +52,6 @@ target_link_libraries(TaskFlow_lib PUBLIC
     Threads::Threads
     Crow::Crow
     asio::asio
-    asio::asio
     unofficial::sqlite3::sqlite3
     nlohmann_json::nlohmann_json
     bcrypt
@@ -66,6 +65,9 @@ target_compile_definitions(TaskFlow_lib PUBLIC
 )
 
 target_precompile_headers(TaskFlow_lib PUBLIC "src/Static.hpp")
+
+# Add debug macro
+target_compile_definitions(TaskFlow_lib PUBLIC "$<$<CONFIG:DEBUG>:DDEBUG>")
 
 add_executable(TaskFlow src/main.cpp)
 target_link_libraries(TaskFlow PRIVATE TaskFlow_lib)

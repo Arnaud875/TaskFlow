@@ -1,11 +1,11 @@
-#ifndef UTILS_SINGLETON_H_
-#define UTILS_SINGLETON_H_
+#ifndef UTILS_CORE_SINGLETON_H_
+#define UTILS_CORE_SINGLETON_H_
 
 #include <cassert>
 #include <memory>
 #include <mutex>
 
-namespace Utils {
+namespace Utils::Core {
     /*
      * @brief Class that implements the Singleton pattern
      * @tparam T Type of the singleton class
@@ -109,9 +109,9 @@ namespace Utils {
 }  // namespace Utils
 
 template<typename T>
-std::unique_ptr<T> Utils::Singleton<T>::instance = nullptr;
+std::unique_ptr<T> Utils::Core::Singleton<T>::instance = nullptr;
 
 template<typename T>
-std::once_flag Utils::Singleton<T>::init_flag;
+std::once_flag Utils::Core::Singleton<T>::init_flag;
 
 #endif

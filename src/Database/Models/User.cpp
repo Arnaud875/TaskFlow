@@ -1,10 +1,10 @@
 #include "User.hpp"
-#include "Utils/SafeInvoke.hpp"
+#include "Utils/Meta/SafeInvoke.hpp"
 #include <bcrypt.h>
 #include <sqlite3.h>
 
 std::optional<Database::Models::UserModel> Database::Models::UserModel::FindByUserId(int userId) {
-    const auto result = Utils::SafeInvoke(&Database::FindRowByAttributes,
+    const auto result = Utils::Meta::SafeInvoke(&Database::FindRowByAttributes,
                                           Database::GetInstance(),
                                           SQLParams{"users", {{"id", std::to_string(userId)}}});
 
@@ -36,7 +36,7 @@ bool Database::Models::UserModel::Save() {
     if (!isPersisted_) {
         const SQLParams params = {
             "Users", {{"username", username_}, {"email", email_}, {"password", hashedPassword_}}};
-        const auto result = Utils::SafeInvoke(&Database::InsertValues, GetDatabase(), params);
+        const auto result = Utils::Meta::SafeInvoke(&Database::InsertValues, GetDatabase(), params);
 
         if (!result) {
             return false;
@@ -70,7 +70,7 @@ bool Database::Models::UserModel::Save() {
             return true;
         }
 
-        const auto result = Utils::SafeInvoke(&Database::UpdateValues,
+        const auto result = Utils::Meta::SafeInvoke(&Database::UpdateValues,
                                               GetDatabase(),
                                               params,
                                               std::make_pair("id", std::to_string(userId_)));
@@ -87,7 +87,7 @@ bool Database::Models::UserModel::Delete() {
         return false;
     }
 
-    const auto result = Utils::SafeInvoke(&Database::DeleteRow,
+    const auto result = Utils::Meta::SafeInvoke(&Database::DeleteRow,
                                           GetDatabase(),
                                           SQLParams{"Users", {}},
                                           std::make_pair("id", std::to_string(userId_)));

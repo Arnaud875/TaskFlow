@@ -1,12 +1,12 @@
-#ifndef UTILS_SAFE_INVOKE_H_
-#define UTILS_SAFE_INVOKE_H_
+#ifndef UTILS_META_SAFEINVOKE_H_
+#define UTILS_META_SAFEINVOKE_H_
 
-#include "Logger/Logger.hpp"
+#include "Utils/Logger/Logger.hpp"
 #include <iostream>
 #include <optional>
 #include <type_traits>
 
-namespace Utils {
+namespace Utils::Meta {
     /**
      * @brief Calls a function and catches any exception that may be thrown
      *

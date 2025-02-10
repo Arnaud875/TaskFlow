@@ -2,7 +2,7 @@
 #define DATABASE_DATABASE_H_
 
 #include "Static.hpp"
-#include "Utils/Singleton.hpp"
+#include "Utils/Core/Singleton.hpp"
 #include <sqlite3.h>
 
 namespace Database {
@@ -25,8 +25,8 @@ namespace Database {
     /**
      * @brief The Database class to interact with the SQLite database
      */
-    class Database : public Utils::Singleton<Database> {
-        friend class Utils::Singleton<Database>;
+    class Database : public Utils::Core::Singleton<Database> {
+        friend class Utils::Core::Singleton<Database>;
         Database() = default;
 
     public:

@@ -1,9 +1,9 @@
-#ifndef UTILS_LOGGER_SOURCE_LOCATION_H_
-#define UTILS_LOGGER_SOURCE_LOCATION_H_
+#ifndef UTILS_META_SOURCE_LOCATION_H_
+#define UTILS_META_SOURCE_LOCATION_H_
 
 #include <string_view>
 
-namespace Utils {
+namespace Utils::Meta {
     /**
      * @brief The source location of the log
      * @details This class is used to get the source location of the log

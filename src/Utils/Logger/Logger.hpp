@@ -3,8 +3,8 @@
 
 #include "LoggerFormat.hpp"
 #include "Static.hpp"
-#include "Utils/Singleton.hpp"
-#include "Utils/SourceLocation.hpp"
+#include "Utils/Core/Singleton.hpp"
+#include "Utils/Meta/SourceLocation.hpp"
 #include "Utils/Utils.hpp"
 #include <array>
 
@@ -13,8 +13,8 @@ namespace Utils::Logger {
      * @brief Class that logs messages to the console
      * @note This class has a unique instance
      */
-    class Logger : public Singleton<Logger> {
-        friend class Singleton<Logger>;
+    class Logger : public Core::Singleton<Logger> {
+        friend class Core::Singleton<Logger>;
         Logger() = default;
 
     public:
@@ -48,7 +48,7 @@ namespace Utils::Logger {
         template<typename... Args>
         void Logs(std::string_view message,
                   LogsLevel level,
-                  const SourceLocation &loc,
+                  const Meta::SourceLocation &loc,
                   Args &&...args) noexcept {
             // Pre-allocate memory for the buffer
             static thread_local std::string buffer;
@@ -107,7 +107,7 @@ namespace Utils::Logger {
 
 #define LOGS(message, level, ...)                                                                  \
     Utils::Logger::Logger::GetInstance().Logs(                                                     \
-        message, level, Utils::SourceLocation::current(), ##__VA_ARGS__)
+        message, level, Utils::Meta::SourceLocation::current(), ##__VA_ARGS__)
 #define LOG_INFO(message, ...) LOGS(message, Utils::Logger::Logger::LogsLevel::INFO, ##__VA_ARGS__)
 #define LOG_WARNING(message, ...)                                                                  \
     LOGS(message, Utils::Logger::Logger::LogsLevel::WARNING, ##__VA_ARGS__)
