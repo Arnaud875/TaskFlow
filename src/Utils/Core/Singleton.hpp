@@ -106,7 +106,7 @@ namespace Utils::Core {
         static std::unique_ptr<T> instance;
         static std::once_flag init_flag;
     };
-}  // namespace Utils
+}  // namespace Utils::Core
 
 template<typename T>
 std::unique_ptr<T> Utils::Core::Singleton<T>::instance = nullptr;

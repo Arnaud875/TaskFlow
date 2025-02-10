@@ -8,9 +8,9 @@ bool Database::Models::TasksModel::Delete() {
     }
 
     const auto result = Utils::Meta::SafeInvoke(&Database::DeleteRow,
-                                          GetDatabase(),
-                                          SQLParams{"Tasks", {}},
-                                          std::make_pair("id", std::to_string(taskId_)));
+                                                GetDatabase(),
+                                                SQLParams{"Tasks", {}},
+                                                std::make_pair("id", std::to_string(taskId_)));
     return static_cast<bool>(result);
 }
 
@@ -74,9 +74,9 @@ bool Database::Models::TasksModel::Save() {
         }
 
         const auto result = Utils::Meta::SafeInvoke(&Database::UpdateValues,
-                                              GetDatabase(),
-                                              params,
-                                              std::make_pair("id", std::to_string(taskId_)));
+                                                    GetDatabase(),
+                                                    params,
+                                                    std::make_pair("id", std::to_string(taskId_)));
         if (!result) {
             return false;
         }

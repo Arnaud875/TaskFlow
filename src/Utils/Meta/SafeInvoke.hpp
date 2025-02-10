@@ -45,6 +45,6 @@ namespace Utils::Meta {
             return std::nullopt;
         }
     }
-}  // namespace Utils
+}  // namespace Utils::Meta
 
 #endif

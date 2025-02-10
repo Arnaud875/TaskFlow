@@ -5,9 +5,10 @@ using namespace Database;
 using namespace Models;
 
 std::optional<TasksModel> TaskManager::FindTaskById(int taskId) {
-    const auto result = Utils::Meta::SafeInvoke(&Database::FindRowByAttributes,
-                                          Database::GetInstance(),
-                                          SQLParams{"Tasks", {{"id", std::to_string(taskId)}}});
+    const auto result =
+        Utils::Meta::SafeInvoke(&Database::FindRowByAttributes,
+                                Database::GetInstance(),
+                                SQLParams{"Tasks", {{"id", std::to_string(taskId)}}});
 
     if (!result.has_value() || result.value().empty()) {
         return std::nullopt;
@@ -39,8 +40,8 @@ std::vector<TasksModel> TaskManager::GetAllTaskByUserId(int userId) {
     std::vector<TasksModel> tasks;
     const auto result =
         Utils::Meta::SafeInvoke(&Database::FindAllRows,
-                          Database::GetInstance(),
-                          SQLParams{"Tasks", {{"user_id", std::to_string(userId)}}});
+                                Database::GetInstance(),
+                                SQLParams{"Tasks", {{"user_id", std::to_string(userId)}}});
 
     if (!result.has_value() || result.value().empty()) {
         return tasks;

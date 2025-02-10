@@ -1,6 +1,8 @@
 #include <catch2/catch_test_macros.hpp>
 #include <catch2/matchers/catch_matchers_string.hpp>
+#include "Utils/Logger/Logger.hpp"
 #include "Utils/Logger/LoggerFormat.hpp"
+#include <filesystem>
 
 // if patate == exist :
 // peel potato 
@@ -52,4 +54,16 @@ TEST_CASE("format_string_multiple_replacements", "[logger]") {
 
 TEST_CASE("format_string_error_cases", "[logger]") {
     REQUIRE_THROWS(FormatStringLogs("{} {}", "too", "many", "arguments"));
+}
+
+TEST_CASE("save_logs_to_file", "[logger]") {
+    Logger::CreateInstance();
+
+    if (std::filesystem::exists("./logs.txt")) {
+        std::filesystem::remove("./logs.txt");
+    }
+
+    for (std::size_t i = 0; i < 150; i++) {
+        LOG_INFO("Test message {}", i);
+    }
 }

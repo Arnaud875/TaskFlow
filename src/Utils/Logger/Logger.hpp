@@ -7,6 +7,9 @@
 #include "Utils/Meta/SourceLocation.hpp"
 #include "Utils/Utils.hpp"
 #include <array>
+#include <fstream>
+
+// TODO: La fonction n'est pas vraiment thread-safe de même pour la sauvegarde des logs.
 
 namespace Utils::Logger {
     /**
@@ -29,16 +32,6 @@ namespace Utils::Logger {
             DEBUG,
             COUNT  // Size of the enum
         };
-
-        /**
-         * @brief Array of string representation of the logs level
-         */
-        static constexpr std::array<std::string_view, static_cast<size_t>(LogsLevel::COUNT)>
-            logsLevelString = {"\033[1;34mINFO\033[0m",
-                               "\033[33mWARNING\033[0m",
-                               "\033[1;31mERROR\033[0m",
-                               "\033[31mFATAL\033[0m",
-                               "\033[34mDEBUG\033[0m"};
 
         /**
          * @brief Logs the message to the console
@@ -80,29 +73,50 @@ namespace Utils::Logger {
             }
 
             buffer.append("\n");
-
-            // Unique write to the console
             std::fwrite(buffer.data(), 1, buffer.size(), stdout);
+
+            if (logsBufferIndex_ == logsBuffer_.size()) {
+                WriteLogsToFile();
+                logsBufferIndex_ = 0;
+            }
+
+            logsBuffer_[logsBufferIndex_] = std::move(buffer);
+            logsBufferIndex_++;
         }
 
-        /**
-         * @brief Get the last error message from the logger
-         */
-        static std::string GetLastError() {
-            return Logger::lastError_;
-        }
-
-        /**
-         * @brief Set the last error message to the logger
-         */
-        static void SetLastError(const std::string &error) {
-            Logger::lastError_ = error;
-        }
-
-        ~Logger() = default;
+        ~Logger() {
+            WriteLogsToFile(logsBufferIndex_);
+        };
 
     private:
-        inline static std::string lastError_ = "";
+        void WriteLogsToFile(std::size_t endIndex = -1) noexcept {
+            // TODO: Peut⁻être largement améliorer
+            std::ofstream logsFile("./logs.txt", std::ios::app);
+            if (!logsFile.is_open()) {
+                std::cerr << "Failed to open logs file" << std::endl;
+                return;
+            }
+
+            for (std::size_t i = 0; i < logsBuffer_.size(); i++) {
+                if (endIndex != -1 && i == endIndex) {
+                    break;
+                }
+
+                logsFile << logsBuffer_[i];
+            }
+
+            logsFile.close();
+        }
+
+        std::array<std::string, 100> logsBuffer_;
+        std::size_t logsBufferIndex_ = 0;
+
+        static constexpr std::array<std::string_view, static_cast<size_t>(LogsLevel::COUNT)>
+            logsLevelString = {"\033[1;34mINFO\033[0m",
+                               "\033[33mWARNING\033[0m",
+                               "\033[1;31mERROR\033[0m",
+                               "\033[31mFATAL\033[0m",
+                               "\033[34mDEBUG\033[0m"};
     };
 
 #define LOGS(message, level, ...)                                                                  \

@@ -4,9 +4,10 @@
 #include <sqlite3.h>
 
 std::optional<Database::Models::UserModel> Database::Models::UserModel::FindByUserId(int userId) {
-    const auto result = Utils::Meta::SafeInvoke(&Database::FindRowByAttributes,
-                                          Database::GetInstance(),
-                                          SQLParams{"users", {{"id", std::to_string(userId)}}});
+    const auto result =
+        Utils::Meta::SafeInvoke(&Database::FindRowByAttributes,
+                                Database::GetInstance(),
+                                SQLParams{"users", {{"id", std::to_string(userId)}}});
 
     if (!result.has_value() || result.value().empty()) {
         return std::nullopt;
@@ -71,9 +72,9 @@ bool Database::Models::UserModel::Save() {
         }
 
         const auto result = Utils::Meta::SafeInvoke(&Database::UpdateValues,
-                                              GetDatabase(),
-                                              params,
-                                              std::make_pair("id", std::to_string(userId_)));
+                                                    GetDatabase(),
+                                                    params,
+                                                    std::make_pair("id", std::to_string(userId_)));
         if (!result) {
             return false;
         }
@@ -88,9 +89,9 @@ bool Database::Models::UserModel::Delete() {
     }
 
     const auto result = Utils::Meta::SafeInvoke(&Database::DeleteRow,
-                                          GetDatabase(),
-                                          SQLParams{"Users", {}},
-                                          std::make_pair("id", std::to_string(userId_)));
+                                                GetDatabase(),
+                                                SQLParams{"Users", {}},
+                                                std::make_pair("id", std::to_string(userId_)));
 
     if (!result) {
         return false;
