@@ -3,9 +3,8 @@
 #include "Utils/Logger/Logger.hpp"
 #include <fstream>
 
-void Database::Database::DeleteRow(const SQLParams &params,
-                                   const std::pair<std::string, std::string> &where) const {
-    if (params.tableName.empty() || where.first.empty() || where.second.empty()) {
+void Database::Database::DeleteRow(const SQLParams &params) const {
+    if (params.tableName.empty() || params.attributes.empty()) {
         throw std::invalid_argument("Table name or values are empty");
     }
 
@@ -13,15 +12,26 @@ void Database::Database::DeleteRow(const SQLParams &params,
         throw std::runtime_error("Database is not connected");
     }
 
-    const std::string sql =
-        "DELETE FROM " + params.tableName + " WHERE " + where.first + " = " + where.second + ";";
-    sqlite3_stmt *stmt = nullptr;
+    std::string sql = "DELETE FROM " + params.tableName + " WHERE " + params.attributes[0].name + " = ? ";
+    if (params.attributes.size() > 1) {
+        for (const auto &attr : params.attributes) {
+            if (attr.name == params.attributes[0].name) {
+                continue;
+            }
 
-    LOG_DEBUG("Executing SQL statement: " + sql);
+            sql += " AND " + attr.name + " = ?";
+        }
+    }
+    sql += ";";
+    sqlite3_stmt *stmt = nullptr;
 
     if (sqlite3_prepare_v2(database_, sql.c_str(), -1, &stmt, nullptr) != SQLITE_OK) {
         throw std::runtime_error("Can't prepare SQL statement: " +
                                  std::string(sqlite3_errmsg(database_)));
+    }
+
+    for (int i = 0; i < params.attributes.size(); i++) {
+        sqlite3_bind_text(stmt, i + 1, params.attributes[i].value.c_str(), -1, SQLITE_STATIC);
     }
 
     if (sqlite3_step(stmt) != SQLITE_DONE) {
@@ -51,8 +61,6 @@ void Database::Database::UpdateValues(const SQLParams &params,
     const std::string sqlStr = "UPDATE " + params.tableName + " SET " + sql + " WHERE " +
                                where.first + " = " + where.second + ";";
     sqlite3_stmt *stmt = nullptr;
-
-    LOG_DEBUG("Executing SQL statement: " + sqlStr);
 
     if (sqlite3_prepare_v2(database_, sqlStr.c_str(), -1, &stmt, nullptr) != SQLITE_OK) {
         throw std::runtime_error("Can't prepare SQL statement: " +
@@ -84,8 +92,6 @@ void Database::Database::InsertValues(const SQLParams &params) const {
 
     const auto [sql, sqlValue] = FormatAttributes(params.attributes);
     const std::string sqlStr = "INSERT INTO " + params.tableName + sql + " VALUES " + sqlValue;
-
-    LOG_DEBUG("Executing SQL statement: " + sqlStr);
 
     sqlite3_stmt *stmt = nullptr;
     if (sqlite3_prepare_v2(database_, sqlStr.c_str(), -1, &stmt, nullptr) != SQLITE_OK) {
@@ -120,11 +126,63 @@ Database::Database::FindAllRows(const SQLParams &params) const {
     const std::string sql = "SELECT * FROM " + params.tableName + ";";
     sqlite3_stmt *stmt = nullptr;
 
-    LOG_DEBUG("Executing SQL statement: " + sql);
+    if (sqlite3_prepare_v2(database_, sql.c_str(), -1, &stmt, nullptr) != SQLITE_OK) {
+        throw std::runtime_error("Can't prepare SQL statement: " +
+                                 std::string(sqlite3_errmsg(database_)));
+    }
+
+    std::vector<std::unordered_map<std::string, std::string>> rows;
+    while (sqlite3_step(stmt) == SQLITE_ROW) {
+        std::unordered_map<std::string, std::string> row;
+        const int columns = sqlite3_column_count(stmt);
+
+        for (int i = 0; i < columns; ++i) {
+            const char *columnName = sqlite3_column_name(stmt, i);
+            const int columnType = sqlite3_column_type(stmt, i);
+            row[columnName] = sqlTypeToString(stmt, columnType, i);
+        }
+
+        rows.emplace_back(row);
+    }
+
+    sqlite3_finalize(stmt);
+    return rows;
+}
+
+std::vector<std::unordered_map<std::string, std::string>>
+Database::Database::FindAllRowsByAttributes(const SQLParams &params) const {
+    if (params.attributes.empty() || params.tableName.empty()) {
+        throw std::invalid_argument("Table name or values are empty");
+    }
+
+    if (!database_) {
+        throw std::runtime_error("Database is not connected");
+    }
+
+    std::string sql =
+        "SELECT * FROM " + params.tableName + " WHERE " + params.attributes[0].name + " = ?";
+    if (params.attributes.size() != 1) {
+        for (const auto &attribute : params.attributes) {
+            if (attribute.name == params.attributes[0].name) {
+                continue;
+            }
+
+            sql += " AND " + attribute.name + " = ?";
+        }
+    }
+
+    sql += ";";
+    sqlite3_stmt *stmt = nullptr;
 
     if (sqlite3_prepare_v2(database_, sql.c_str(), -1, &stmt, nullptr) != SQLITE_OK) {
         throw std::runtime_error("Can't prepare SQL statement: " +
                                  std::string(sqlite3_errmsg(database_)));
+    }
+
+    for (std::size_t i = 0; i < params.attributes.size(); ++i) {
+        // Bind value to the statement and use SQLITE_STATIC to indicate that the
+        // pointer is constant and will not be deleted
+        sqlite3_bind_text(stmt, i + 1, params.attributes[i].value.c_str(), -1, SQLITE_STATIC);
     }
 
     std::vector<std::unordered_map<std::string, std::string>> rows;
@@ -155,20 +213,32 @@ Database::Database::FindRowByAttributes(const SQLParams &params) const {
         throw std::runtime_error("Database is not connected");
     }
 
-    const std::string sql =
-        "SELECT * FROM " + params.tableName + " WHERE " + params.attributes[0].name + " = ?;";
-    sqlite3_stmt *stmt = nullptr;
+    std::string sql =
+        "SELECT * FROM " + params.tableName + " WHERE " + params.attributes[0].name + " = ?";
+    if (params.attributes.size() != 1) {
+        for (const auto &attribute : params.attributes) {
+            if (attribute.name == params.attributes[0].name) {
+                continue;
+            }
 
-    LOG_DEBUG("Executing SQL statement: " + sql);
+            sql += " AND " + attribute.name + " = ?";
+        }
+    }
+
+    sql += ";";
+
+    sqlite3_stmt *stmt = nullptr;
 
     if (sqlite3_prepare_v2(database_, sql.c_str(), -1, &stmt, nullptr) != SQLITE_OK) {
         throw std::runtime_error("Can't prepare SQL statement: " +
                                  std::string(sqlite3_errmsg(database_)));
     }
 
-    // Bind value to the statement and use SQLITE_STATIC to indicate that the
-    // pointer is constant and will not be deleted
-    sqlite3_bind_text(stmt, 1, params.attributes[0].value.c_str(), -1, SQLITE_STATIC);
+    for (std::size_t i = 0; i < params.attributes.size(); ++i) {
+        // Bind value to the statement and use SQLITE_STATIC to indicate that the
+        // pointer is constant and will not be deleted
+        sqlite3_bind_text(stmt, i + 1, params.attributes[i].value.c_str(), -1, SQLITE_STATIC);
+    }
 
     // Check if row exists
     if (sqlite3_step(stmt) != SQLITE_ROW) {
@@ -197,7 +267,7 @@ void Database::Database::Connect(const std::string &databaseFile) {
         return;
     }
 
-    const int result = sqlite3_open(databaseFile.c_str(), &database_);
+    int result = sqlite3_open(databaseFile.c_str(), &database_);
     if (result != SQLITE_OK) {
         throw std::runtime_error("Can't open database: " + std::string(sqlite3_errmsg(database_)));
     }

@@ -92,9 +92,7 @@ namespace Database::Models {
          *
          * @return Return the user object.
          */
-        UserModel GetUser() const {
-            return UserModel::FindByUserId(userId_).value();
-        }
+        UserModel GetUser() const;
 
         [[nodiscard]] int GetTaskId() const {
             return taskId_;

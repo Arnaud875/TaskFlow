@@ -100,15 +100,6 @@ namespace Database::Models {
          */
         bool Delete();
 
-        /**
-         * @brief Find a user by its user ID.
-         *
-         * @param userId The user ID to find.
-         * @return Return the user object if found.
-         */
-        [[nodiscard]]
-        static std::optional<UserModel> FindByUserId(int userId);
-
     private:
         /**
          * @brief Hash the password using bcrypt.

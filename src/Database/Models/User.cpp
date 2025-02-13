@@ -1,34 +1,7 @@
 #include "User.hpp"
+#include "Database/TaskManager.hpp"
 #include "Utils/Meta/SafeInvoke.hpp"
 #include <bcrypt.h>
-#include <sqlite3.h>
-
-std::optional<Database::Models::UserModel> Database::Models::UserModel::FindByUserId(int userId) {
-    const auto result =
-        Utils::Meta::SafeInvoke(&Database::FindRowByAttributes,
-                                Database::GetInstance(),
-                                SQLParams{"users", {{"id", std::to_string(userId)}}});
-
-    if (!result.has_value() || result.value().empty()) {
-        return std::nullopt;
-    }
-
-    try {
-        const auto &userResult = result.value();
-        UserModel userModel;
-        userModel.Create(UserAttributes{std::stoi(userResult.at("id")),
-                                        userResult.at("username"),
-                                        userResult.at("email"),
-                                        userResult.at("password"),
-                                        std::stoi(userResult.at("created_at")),
-                                        std::stoi(userResult.at("updated_at")),
-                                        true,
-                                        true});
-        return std::move(userModel);
-    } catch (const std::exception &e) {
-        return std::nullopt;
-    }
-}
 
 bool Database::Models::UserModel::Save() {
     if (userId_ == 0)
@@ -45,7 +18,7 @@ bool Database::Models::UserModel::Save() {
 
         isPersisted_ = true;
     } else {
-        const std::optional<UserModel> currentUserOpt = FindByUserId(userId_);
+        const std::optional<UserModel> currentUserOpt = TaskManager::FindUserById(userId_);
         UserModel currentUser;
 
         if (!currentUserOpt.has_value()) {
@@ -84,14 +57,18 @@ bool Database::Models::UserModel::Save() {
 }
 
 bool Database::Models::UserModel::Delete() {
+    if (userId_ == 0) {
+        throw std::invalid_argument("The model is not initialized.");
+    }
+
     if (!isPersisted_) {
         return false;
     }
 
-    const auto result = Utils::Meta::SafeInvoke(&Database::DeleteRow,
-                                                GetDatabase(),
-                                                SQLParams{"Users", {}},
-                                                std::make_pair("id", std::to_string(userId_)));
+    const bool result =
+        static_cast<bool>(Utils::Meta::SafeInvoke(&Database::DeleteRow,
+                                                  GetDatabase(),
+                                                  SQLParams{"Users", {{"id", std::to_string(userId_)}}}));
 
     if (!result) {
         return false;

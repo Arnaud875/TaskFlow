@@ -1,17 +1,35 @@
 #include "Tasks.hpp"
 #include "Database/TaskManager.hpp"
 #include "Utils/Meta/SafeInvoke.hpp"
+#include <sqlite3.h>
 
 bool Database::Models::TasksModel::Delete() {
     if (taskId_ == 0) {
         throw std::invalid_argument("The model is not initialized.");
     }
 
-    const auto result = Utils::Meta::SafeInvoke(&Database::DeleteRow,
-                                                GetDatabase(),
-                                                SQLParams{"Tasks", {}},
-                                                std::make_pair("id", std::to_string(taskId_)));
-    return static_cast<bool>(result);
+    if (!isPersisted_) {
+        return false;
+    }
+
+    bool result =
+        static_cast<bool>(Utils::Meta::SafeInvoke(&Database::DeleteRow,
+                                                  GetDatabase(),
+                                                  SQLParams{"Tasks", {{"id", std::to_string(taskId_)}}}));
+
+    if (!result) {
+        return false;
+    }
+
+    isPersisted_ = false;
+
+    // Delete all tags assigned to the task
+    result = static_cast<bool>(
+        Utils::Meta::SafeInvoke(&Database::DeleteRow,
+                                GetDatabase(),
+                                SQLParams{"TaskTags", {{"task_id", std::to_string(taskId_)}}}));
+
+    return result;
 }
 
 bool Database::Models::TasksModel::Save() {
@@ -83,6 +101,19 @@ bool Database::Models::TasksModel::Save() {
     }
 
     return true;
+}
+
+Database::Models::UserModel Database::Models::TasksModel::GetUser() const {
+    if (userId_ == 0) {
+        throw std::invalid_argument("The model is not initialized.");
+    }
+
+    const auto userOpt = TaskManager::FindUserById(userId_);
+    if (!userOpt.has_value()) {
+        throw std::invalid_argument("The user does not exist.");
+    }
+
+    return userOpt.value();
 }
 
 void Database::Models::TasksModel::SetTitle(const std::string &title) {

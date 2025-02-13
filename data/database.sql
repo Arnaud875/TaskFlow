@@ -7,11 +7,6 @@ CREATE TABLE `Users` (
   `updated_at` datetime NOT NULL DEFAULT (CURRENT_TIMESTAMP)
 );
 
-CREATE TABLE `Status` (
-  `status_id` integer PRIMARY KEY,
-  `status_name` text NOT NULL
-);
-
 CREATE TABLE `Tasks` (
   `id` integer PRIMARY KEY,
   `user_id` integer,
@@ -37,8 +32,10 @@ CREATE TABLE `History` (
 
 CREATE TABLE `Tags` (
   `id` integer PRIMARY KEY,
+  `user_id` integer,
   `name` text UNIQUE NOT NULL,
-  `color` text
+  `color` text,
+  FOREIGN KEY (`user_id`) REFERENCES `Users` (`id`)
 );
 
 CREATE TABLE `TaskTags` (

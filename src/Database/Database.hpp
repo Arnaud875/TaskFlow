@@ -64,8 +64,7 @@ namespace Database {
          * @param params The parameters to search for
          * @param where The attribute and value to search for
          */
-        void DeleteRow(const SQLParams &params,
-                       const std::pair<std::string, std::string> &where) const;
+        void DeleteRow(const SQLParams &params) const;
 
         /**
          * @brief Find all rows in the database
@@ -75,6 +74,14 @@ namespace Database {
          */
         std::vector<std::unordered_map<std::string, std::string>>
         FindAllRows(const SQLParams &params) const;
+
+        /**
+         * @brief Find all rows in the database by their attributes
+         * @param params The parameters to search for
+         * @return Returns a vector of rows as maps of attributes and values
+         */
+        std::vector<std::unordered_map<std::string, std::string>>
+        FindAllRowsByAttributes(const SQLParams &params) const;
 
         /**
          * @brief Find a row in the database by its attributes
@@ -90,8 +97,12 @@ namespace Database {
          *
          * @return Return true if the database is connected, false otherwise
          */
-        bool IsConnected() const {
+        bool IsConnected() const noexcept {
             return database_ != nullptr;
+        }
+
+        [[nodiscard]] sqlite3 *GetConnection() const noexcept {
+            return database_;
         }
 
     private:
